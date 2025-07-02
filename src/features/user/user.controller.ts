@@ -1,56 +1,77 @@
 import {
   Body,
   Controller,
-  Delete,
-  Get,
-  NotFoundException,
-  Param,
-  ParseIntPipe,
-  Patch,
+  Headers,
+  Ip,
   Post,
-  Query,
+  Request,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from '@prisma/client';
-import { GetUsersDto } from './dto/query/get-users.dto';
-import { CreateUserDto } from './dto/request/create-user.dto';
-import { UpdateUserDto } from './dto/request/update-user.dto';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { LoginRequestDto } from './dto/request/login-request.dto';
+import { v4 as uuidv4 } from 'uuid';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { RefreshTokenDto } from './dto/request/refresh-token.dto';
+import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
+import { RegisterDto } from './dto/request/register.dto';
+import {
+  LocalAuthRequest,
+  JwtRefreshRequest,
+  JwtAuthRequest,
+} from './interface/requests.interface';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
-  async getUsers(@Query() { skip, take }: GetUsersDto) {
-    return this.userService.getUsers({ skip, take });
+  @Post('register')
+  register(@Body() registerDto: RegisterDto) {
+    return this.userService.register(registerDto);
   }
 
-  @Get(':id')
-  async getUser(@Param('id', ParseIntPipe) id: number) {
-    const user = await this.userService.getUser({ id });
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  login(
+    @Request() req: LocalAuthRequest,
+    @Body() loginDto: LoginRequestDto,
+    @Headers('user-agent') userAgent: string,
+    @Ip() ip: string,
+  ) {
+    const deviceId = loginDto.deviceId || uuidv4();
+    return this.userService.login(req.user, deviceId, userAgent, ip);
+  }
 
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+  @UseGuards(JwtRefreshGuard)
+  @Post('refresh')
+  refreshTokens(
+    @Request() req: JwtRefreshRequest,
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ) {
+    const userId = req.user.sub;
+    const refreshToken = req.user.refreshToken;
+    const deviceId = refreshTokenDto.deviceId;
+
+    if (!deviceId) {
+      throw new UnauthorizedException('Device ID is required');
     }
 
-    return user;
+    return this.userService.refreshTokens(userId, refreshToken, deviceId);
   }
 
-  @Post()
-  async createUser(@Body() req: CreateUserDto): Promise<User> {
-    return this.userService.createUser(req);
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  logout(
+    @Request() req: JwtAuthRequest,
+    @Body() body: { refreshToken: string },
+  ) {
+    return this.userService.logout(req.user.sub, body.refreshToken);
   }
 
-  @Patch(':id')
-  async updateUser(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() req: UpdateUserDto,
-  ): Promise<User> {
-    return this.userService.updateUser({ id, data: req });
-  }
-
-  @Delete(':id')
-  async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<User> {
-    return this.userService.deleteUser({ id });
+  @UseGuards(JwtAuthGuard)
+  @Post('logout-all')
+  logoutAll(@Request() req: JwtAuthRequest) {
+    return this.userService.logoutAll(req.user.sub);
   }
 }
