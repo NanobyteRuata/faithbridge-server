@@ -82,8 +82,12 @@ export class UserService {
     // Create user
     return this.prisma.user.create({
       data: {
-        username,
+        ...registerDto,
+        email: registerDto.email[0],
         password: hashedPassword,
+        isActive: true,
+        roleId: 1,
+        profileId: 1,
       },
     });
   }

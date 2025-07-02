@@ -14,29 +14,136 @@ datasource db {
 }
 
 model User {
-  id              Int       @default(autoincrement()) @id
-  username        String    @unique
-  password        String
-  resetCode       String?
-  sessions        Session[] @relation("UserSessions")
+  id                 Int       @id @default(autoincrement())
+  email              String    @unique
+  username           String    @unique
+  password           String
+  resetCode          String?
+  resetCodeExpiresAt DateTime?
+  isActive           Boolean
 
-  createdById     Int?
-  createdBy       User?     @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdUsers    User[]    @relation("UserCreatedBy")
+  sessions Session[]
 
-  createdAt       DateTime  @default(now())
+  roleId Int
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
-  updatedById     Int?
-  updatedBy       User?     @relation("UserUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  updatedUsers    User[]    @relation("UserUpdatedBy")
+  profileId Int     @unique
+  profile   Profile @relation("UserProfile", fields: [profileId], references: [id], onDelete: Restrict)
 
-  updatedAt       DateTime? @updatedAt
+  activityLogs ActivityLog[]
+
+  createdById  Int?
+  createdBy    User?  @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdUsers User[] @relation("UserCreatedBy")
+
+  createdAt DateTime @default(now())
+
+  updatedById  Int?
+  updatedBy    User?  @relation("UserUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedUsers User[] @relation("UserUpdatedBy")
+
+  updatedAt DateTime? @updatedAt
+
+  // Role relations
+  createdRoles Role[] @relation("RoleCreatedBy")
+  updatedRoles Role[] @relation("RoleUpdatedBy")
+
+  // Permission relations
+  createdPermissions Permission[] @relation("PermissionCreatedBy")
+  updatedPermissions Permission[] @relation("PermissionUpdatedBy")
+
+  // ActivityLog relations
+  createdActivityLogs ActivityLog[] @relation("ActivityLogCreatedBy")
+  updatedActivityLogs ActivityLog[] @relation("ActivityLogUpdatedBy")
+
+  // Profile relations
+  createdProfiles Profile[] @relation("ProfileCreatedBy")
+  updatedProfiles Profile[] @relation("ProfileUpdatedBy")
+
+  // ContactType relations
+  createdContactTypes ContactType[] @relation("ContactTypeCreatedBy")
+  updatedContactTypes ContactType[] @relation("ContactTypeUpdatedBy")
+
+  // Household relations
+  createdHouseholds Household[] @relation("HouseholdCreatedBy")
+  updatedHouseholds Household[] @relation("HouseholdUpdatedBy")
+
+  // Membership relations
+  createdMemberships Membership[] @relation("MembershipCreatedBy")
+  updatedMemberships Membership[] @relation("MembershipUpdatedBy")
+
+  // RelationshipType relations
+  createdRelationshipTypes RelationshipType[] @relation("RelationshipTypeCreatedBy")
+  updatedRelationshipTypes RelationshipType[] @relation("RelationshipTypeUpdatedBy")
+
+  // Relationship relations
+  createdRelationships Relationship[] @relation("RelationshipCreatedBy")
+  updatedRelationships Relationship[] @relation("RelationshipUpdatedBy")
+}
+
+model Permission {
+  id          Int     @id @default(autoincrement())
+  action      String
+  resource    String
+  description String?
+
+  roles Role[]
+
+  createdById Int?
+  createdBy   User? @relation("PermissionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("PermissionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime? @updatedAt
+
+  @@unique([action, resource], name: "action_resource")
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  permissions Permission[]
+  users       User[]
+
+  createdById Int?
+  createdBy   User? @relation("RoleCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("RoleUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime? @updatedAt
+}
+
+model ActivityLog {
+  id          Int     @id @default(autoincrement())
+  actorId     Int
+  actor       User    @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  action      String
+  description String?
+  resource    String?
+  resourceId  Int?
+  changes     Json?
+
+  createdById Int?
+  createdBy   User? @relation("ActivityLogCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("ActivityLogUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime? @updatedAt
 }
 
 model Session {
   id           Int      @id @default(autoincrement())
   userId       Int
-  user         User     @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshToken String   @unique
   deviceId     String
   userAgent    String?
@@ -44,4 +151,169 @@ model Session {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Profile {
+  id       Int     @id @default(autoincrement())
+  title    String
+  name     String
+  lastName String?
+  nickName String?
+  status   String  @default("Active")
+
+  user User? @relation("UserProfile")
+
+  membershipId Int?
+  membership   Membership? @relation(fields: [membershipId], references: [id], onDelete: Restrict)
+
+  emails   Email[]
+  phones   Phone[]
+  contacts Contact[]
+
+  householdId Int?
+  household   Household? @relation(fields: [householdId], references: [id], onDelete: SetNull)
+  address     Address[]
+
+  relationships Relationship[] @relation("ProfileRelationship")
+  relatedTo     Relationship[] @relation("ProfileRelated")
+
+  createdById Int?
+  createdBy   User? @relation("ProfileCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("ProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
+}
+
+model Phone {
+  id        Int     @id @default(autoincrement())
+  profileId Int
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  phone     String
+}
+
+model Email {
+  id        Int     @id @default(autoincrement())
+  profileId Int
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  email     String
+}
+
+model ContactType {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  contacts    Contact[]
+
+  createdById Int?
+  createdBy   User? @relation("ContactTypeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("ContactTypeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime? @updatedAt
+}
+
+model Contact {
+  id            Int         @id @default(autoincrement())
+  profileId     Int
+  profile       Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  contactTypeId Int
+  contactType   ContactType @relation(fields: [contactTypeId], references: [id], onDelete: Restrict)
+  value         String
+}
+
+model Address {
+  id         Int         @id @default(autoincrement())
+  profileId  Int
+  profile    Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  address    String
+  households Household[]
+}
+
+model Household {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  fromDate    DateTime
+  toDate      DateTime?
+  isCurrent   Boolean
+  profiles    Profile[]
+
+  addressId Int
+  address   Address @relation(fields: [addressId], references: [id], onDelete: Restrict)
+
+  createdById Int?
+  createdBy   User? @relation("HouseholdCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("HouseholdUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
+}
+
+model Membership {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  profiles    Profile[]
+
+  createdById Int?
+  createdBy   User? @relation("MembershipCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("MembershipUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
+}
+
+model RelationshipType {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+
+  relationships Relationship[]
+
+  inverseRelationshipTypeId Int?              @unique
+  inverseRelationshipType   RelationshipType? @relation("InverseRelationshipType", fields: [inverseRelationshipTypeId], references: [id], onDelete: SetNull)
+  inverseOf                 RelationshipType? @relation("InverseRelationshipType")
+
+  createdById Int?
+  createdBy   User? @relation("RelationshipTypeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("RelationshipTypeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
+}
+
+model Relationship {
+  id                 Int              @id @default(autoincrement())
+  profileId          Int
+  profile            Profile          @relation("ProfileRelationship", fields: [profileId], references: [id], onDelete: Cascade)
+  relatedProfileId   Int
+  relatedProfile     Profile          @relation("ProfileRelated", fields: [relatedProfileId], references: [id], onDelete: Cascade)
+  relationshipTypeId Int
+  relationshipType   RelationshipType @relation(fields: [relationshipTypeId], references: [id], onDelete: Restrict)
+
+  createdById Int?
+  createdBy   User? @relation("RelationshipCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("RelationshipUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
 }

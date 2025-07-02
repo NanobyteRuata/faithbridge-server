@@ -5,14 +5,27 @@
 $ docker-compose up -d db
 ```
 
-- migrate when schema change
+- format, validate and migrate when schema change
 ```
-$ npx prisma migrate dev --name add-more-user-fields
+$ npx prisma format
+$ npx prisma validate
+$ npx prisma migrate dev --name {comment-text}
 ```
 
 - generate prisma models
 ```
-$ npx prisma generate
+$ npx prisma generate --schema=./prisma/schema.prisma
+```
+
+- seed (for initial startup)
+```
+$ npx prisma db seed
+```
+
+- reset migrations (not recommended but just in case)
+```
+$ npx prisma migrate reset
+// format, validate and migrate
 ```
 
 - run project locally
