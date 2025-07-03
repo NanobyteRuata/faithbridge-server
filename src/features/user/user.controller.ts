@@ -21,12 +21,17 @@ import {
   JwtRefreshRequest,
   JwtAuthRequest,
 } from './interface/requests.interface';
+import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
+import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('register')
+  @UseGuards(PermissionsGuard)
+  @Permissions(PERMISSIONS.USER.CREATE)
   register(@Body() registerDto: RegisterDto) {
     return this.userService.register(registerDto);
   }

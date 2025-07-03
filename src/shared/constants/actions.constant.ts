@@ -1,3 +1,4 @@
+// For permissions
 export enum RESOURCE_ACTIONS {
   CREATE = 'CREATE',
   READ = 'READ',
@@ -5,6 +6,7 @@ export enum RESOURCE_ACTIONS {
   DELETE = 'DELETE',
 }
 
+// For logging
 export enum NON_RESOURCE_ACTIONS {
   LOGIN = 'LOGIN',
 }

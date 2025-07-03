@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()
@@ -14,11 +14,11 @@ export class PaginationDto {
   @Min(1)
   limit: number = 10;
 
+  @IsOptional()
+  @IsString()
+  search?: string;
+
   get skip(): number {
     return (this.page - 1) * this.limit;
-  }
-
-  get take(): number {
-    return this.limit;
   }
 }
