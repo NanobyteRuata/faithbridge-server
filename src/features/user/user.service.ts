@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
@@ -12,6 +14,8 @@ import { RegisterDto } from './dto/request/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LoginResponseDto } from './dto/response/login-response.dto';
+import { randomInt } from 'crypto';
+import { EmailService } from 'src/shared/services/email.service';
 
 @Injectable()
 export class UserService {
@@ -19,6 +23,7 @@ export class UserService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async validateUser(username: string, password: string): Promise<User> {
@@ -148,6 +153,57 @@ export class UserService {
     });
 
     return true;
+  }
+
+  async sendPasswordResetCode(email: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const code = randomInt(100000, 999999).toString();
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await this.prisma.user.update({
+      where: { email },
+      data: {
+        resetCode: code,
+        resetCodeExpiresAt: expires,
+      },
+    });
+
+    await this.emailService.sendEmail(
+      email,
+      'Your password reset code',
+      `Your password reset code is: ${code}`,
+      `<p>Your password reset code is: <b>${code}</b></p>`,
+    );
+  }
+
+  async resetPasswordWithCode(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (
+      !user ||
+      user.resetCode !== code ||
+      !user.resetCodeExpiresAt ||
+      user.resetCodeExpiresAt < new Date()
+    ) {
+      throw new BadRequestException('Invalid or expired code');
+    }
+
+    // eslint-disable-next-line
+    const hashed = await bcrypt.hash(newPassword, 10) as string;
+
+    await this.prisma.user.update({
+      where: { email },
+      data: {
+        password: hashed,
+        resetCode: null,
+        resetCodeExpiresAt: null,
+      },
+    });
   }
 
   private async generateTokens(user: User, deviceId: string): Promise<Tokens> {

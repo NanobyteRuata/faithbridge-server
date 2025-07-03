@@ -79,4 +79,20 @@ export class UserController {
   logoutAll(@Request() req: JwtAuthRequest) {
     return this.userService.logoutAll(req.user.sub);
   }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    await this.userService.sendPasswordResetCode(email);
+    return { success: true };
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('email') email: string,
+    @Body('code') code: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    await this.userService.resetPasswordWithCode(email, code, newPassword);
+    return { success: true };
+  }
 }

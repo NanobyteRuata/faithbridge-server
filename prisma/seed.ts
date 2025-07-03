@@ -55,8 +55,8 @@ async function main() {
   console.log(`Created Admin role with ${createdPermissions.length} permissions`);
   
   // Create default profile and admin user if not exists
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPhone = process.env.ADMIN_PHONE || '+1123123123';
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@faithbridge.com';
+  const adminPhone = process.env.ADMIN_PHONE;
   const adminUser = await prisma.user.findUnique({ where: { email: adminEmail, phone: adminPhone } });
   if (!adminUser) {
     const adminProfileData = {
