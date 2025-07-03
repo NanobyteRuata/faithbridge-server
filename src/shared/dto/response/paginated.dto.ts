@@ -1,10 +1,9 @@
-export class PaginatedDto<T> {
-  data: T[];
-  meta: PaginatedMeta;
-}
+import { ResponseDto } from './response.dto';
 
-export class PaginatedMeta {
-  page: number;
-  limit: number;
-  total: number;
+export class PaginatedDto<T> extends ResponseDto<T[]> {
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+  };
 }
