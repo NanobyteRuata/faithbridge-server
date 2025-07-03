@@ -2,6 +2,9 @@ import { Permission, PrismaClient } from '@prisma/client';
 import { RESOURCE_ACTIONS } from '../src/shared/constants/actions.constant';
 import { RESOURCES } from '../src/shared/constants/resources.constant';
 import * as bcrypt from 'bcrypt';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -33,15 +36,16 @@ async function main() {
   console.log(`Created ${createdPermissions.length} permissions`);
   
   // Create Admin role with all permissions
+  const adminRoleName = process.env.ADMIN_ROLE_NAME || 'Admin';
   const adminRole = await prisma.role.upsert({
-    where: { name: 'Admin' },
+    where: { name: adminRoleName },
     update: {
       permissions: {
         connect: createdPermissions.map(p => ({ id: p.id }))
       }
     },
     create: {
-      name: 'Admin',
+      name: adminRoleName,
       permissions: {
         connect: createdPermissions.map(p => ({ id: p.id }))
       }
@@ -50,41 +54,39 @@ async function main() {
   
   console.log(`Created Admin role with ${createdPermissions.length} permissions`);
   
-  // Create default profile for admin user
-  const adminProfile = await prisma.profile.upsert({
-    where: { id: 1 },
-    update: {
+  // Create default profile and admin user if not exists
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPhone = process.env.ADMIN_PHONE || '+1123123123';
+  const adminUser = await prisma.user.findUnique({ where: { email: adminEmail, phone: adminPhone } });
+  if (!adminUser) {
+    const adminProfileData = {
       title: 'Mr',
-      name: 'Admin',
-      status: 'Active'
-    },
-    create: {
-      title: 'Mr',
-      name: 'Admin',
+      name: process.env.ADMIN_NAME || 'Admin',
       status: 'Active'
     }
-  });
-  
-  // Create admin user
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-  await prisma.user.upsert({
-    where: { email: 'admin@faithbridge.com' },
-    update: {
-      password: hashedPassword,
-      role: { connect: { id: adminRole.id } },
-      isActive: true
-    },
-    create: {
-      email: 'admin@faithbridge.com',
-      username: 'admin',
-      password: hashedPassword,
-      roleId: adminRole.id,
-      profileId: adminProfile.id,
-      isActive: true
-    }
-  });
-  
-  console.log('Created admin user');
+
+    const adminProfile = await prisma.profile.create({
+      data: adminProfileData
+    });
+    
+    // Create admin user
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 10);
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    await prisma.user.create({
+      data: {
+        email: adminEmail,
+        phone: adminPhone,
+        username: adminUsername,
+        password: hashedPassword,
+        roleId: adminRole.id,
+        profileId: adminProfile.id,
+        isActive: true
+      }
+    });
+    
+    console.log('Created admin user');
+  }
+
   console.log('Seeding completed.');
 }
 
