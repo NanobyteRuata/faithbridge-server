@@ -1,8 +1,8 @@
-import { User } from '@prisma/client';
+import { UserWithRoleAndPermissions } from '../dto/response/login-response.dto';
 
 // For local strategy requests
 export interface LocalAuthRequest {
-  user: User;
+  user: UserWithRoleAndPermissions;
 }
 
 // For JWT strategy requests

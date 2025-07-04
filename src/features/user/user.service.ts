@@ -18,6 +18,7 @@ import { randomInt } from 'crypto';
 import { EmailService } from 'src/shared/services/email.service';
 import { ProfileService } from '../profile/profile.service';
 import { RegisterResponseDto } from './dto/response/register-response.dto';
+import { UserWithRoleAndPermissions } from './dto/response/login-response.dto';
 
 @Injectable()
 export class UserService {
@@ -29,8 +30,14 @@ export class UserService {
     private profileService: ProfileService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<User> {
-    const user = await this.prisma.user.findUnique({ where: { username } });
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<UserWithRoleAndPermissions> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      include: { role: { include: { permissions: true } } },
+    });
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -49,7 +56,7 @@ export class UserService {
   }
 
   async login(
-    user: User,
+    user: UserWithRoleAndPermissions,
     deviceId: string,
     userAgent?: string,
     ipAddress?: string,
@@ -68,6 +75,7 @@ export class UserService {
     return {
       ...tokens,
       deviceId,
+      user,
     };
   }
 
