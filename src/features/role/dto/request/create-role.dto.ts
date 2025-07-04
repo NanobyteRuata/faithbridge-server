@@ -6,7 +6,7 @@ export class CreateRoleDto {
   name: string;
 
   @IsArray()
-  @IsNumber()
+  @IsNumber({}, { each: true })
   @IsNotEmpty()
   permissions: number[];
 }

@@ -17,8 +17,8 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
   ): Observable<ResponseDto<T> | PaginatedDto<T>> {
     return next.handle().pipe(
       map((data) => {
-        if (data instanceof PaginatedDto) {
-          return data;
+        if (typeof data === 'object' && 'data' in data && 'meta' in data) {
+          return data as PaginatedDto<T>;
         }
         return {
           data: data as T,

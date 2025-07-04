@@ -1,12 +1,15 @@
+import { Type } from 'class-transformer';
 import {
   IsString,
   MinLength,
   MaxLength,
   IsEmail,
   IsNotEmpty,
+  IsNumber,
+  ValidateNested,
   IsOptional,
-  IsArray,
 } from 'class-validator';
+import { CreateProfileDto } from 'src/features/profile/dto/request/create-profile.dto';
 
 export class RegisterDto {
   @IsString()
@@ -14,35 +17,26 @@ export class RegisterDto {
   @MaxLength(20)
   username: string;
 
-  @IsArray()
   @IsString()
   @IsNotEmpty()
   @IsEmail()
-  email: string[];
+  email: string;
 
   @IsString()
   @MinLength(6)
   @MaxLength(100)
   password: string;
 
+  @IsOptional()
   @IsString()
+  phone?: string;
+
+  @IsNumber()
   @IsNotEmpty()
-  name: string;
+  roleId: number;
 
-  @IsString()
-  @IsOptional()
-  lastName: string;
-
-  @IsString()
-  @IsOptional()
-  nickName: string;
-
-  @IsArray()
-  @IsString()
-  phone: string[];
-
-  @IsArray()
-  @IsString()
-  @IsOptional()
-  address: string[];
+  @ValidateNested()
+  @Type(() => CreateProfileDto)
+  @IsNotEmpty()
+  profile: CreateProfileDto;
 }

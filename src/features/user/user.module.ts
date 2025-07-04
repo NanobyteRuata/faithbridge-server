@@ -5,9 +5,10 @@ import { AuthModule } from 'src/core/auth/auth.module';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { SharedModule } from 'src/shared/shared.module';
+import { ProfileModule } from '../profile/profile.module';
 
 @Module({
-  imports: [AuthModule, SharedModule],
+  imports: [AuthModule, ProfileModule, SharedModule],
   providers: [UserService, LocalStrategy, JwtRefreshStrategy],
   controllers: [UserController],
   exports: [UserService],

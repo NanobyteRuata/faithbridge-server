@@ -14,7 +14,10 @@ export class RoleService {
     return await this.prisma.permission.findMany();
   }
 
-  async createRole(createRoleDto: CreateRoleDto): Promise<Role> {
+  async createRole(
+    createRoleDto: CreateRoleDto,
+    userId: number,
+  ): Promise<Role> {
     const { name, permissions } = createRoleDto;
     const role = await this.prisma.role.create({
       data: {
@@ -22,6 +25,11 @@ export class RoleService {
         permissions: {
           connect: permissions.map((id) => ({ id })),
         },
+        createdById: userId,
+        updatedById: userId,
+      },
+      include: {
+        permissions: true,
       },
     });
 
@@ -72,19 +80,32 @@ export class RoleService {
   async updateRole(
     id: number,
     { name, permissions }: UpdateRoleDto,
+    userId: number,
   ): Promise<Role> {
+    const data: Prisma.RoleUpdateInput = {
+      name,
+      updatedBy: {
+        connect: { id: userId },
+      },
+    };
+
+    if (permissions) {
+      data.permissions = {
+        set: permissions.map((id) => ({ id })),
+      };
+    }
+
     const role = await this.prisma.role.update({
       where: { id },
-      data: {
-        name,
-        permissions: { connect: permissions?.map((id) => ({ id })) ?? [] },
-      },
+      data,
       include: { permissions: true },
     });
     return role;
   }
 
-  async removeRole(id: number): Promise<Role> {
+  async removeRole(id: number, userId: number): Promise<Role> {
+    // TODO: use userId for activity logging later
+    console.log('role removed by: user id:', userId);
     return await this.prisma.role.delete({ where: { id } });
   }
 }

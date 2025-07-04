@@ -4,6 +4,7 @@ import {
   Headers,
   Ip,
   Post,
+  Req,
   Request,
   UnauthorizedException,
   UseGuards,
@@ -24,16 +25,19 @@ import {
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
+import { LogoutDto } from './dto/request/logout.dto';
+import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
+import { ResetPasswordDto } from './dto/request/reset-password.dto';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('register')
-  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.USER.CREATE)
-  register(@Body() registerDto: RegisterDto) {
-    return this.userService.register(registerDto);
+  register(@Req() req: JwtAuthRequest, @Body() registerDto: RegisterDto) {
+    return this.userService.register(registerDto, req.user.sub);
   }
 
   @UseGuards(LocalAuthGuard)
@@ -67,11 +71,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  logout(
-    @Request() req: JwtAuthRequest,
-    @Body() body: { refreshToken: string },
-  ) {
-    return this.userService.logout(req.user.sub, body.refreshToken);
+  logout(@Request() req: JwtAuthRequest, @Body() { refreshToken }: LogoutDto) {
+    return this.userService.logout(req.user.sub, refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -81,18 +82,16 @@ export class UserController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body('email') email: string) {
-    await this.userService.sendPasswordResetCode(email);
-    return { success: true };
+  async forgotPassword(@Body() { email }: ForgotPasswordDto) {
+    return await this.userService.sendPasswordResetCode(email);
   }
 
   @Post('reset-password')
-  async resetPassword(
-    @Body('email') email: string,
-    @Body('code') code: string,
-    @Body('newPassword') newPassword: string,
-  ) {
-    await this.userService.resetPasswordWithCode(email, code, newPassword);
-    return { success: true };
+  async resetPassword(@Body() { email, code, newPassword }: ResetPasswordDto) {
+    return await this.userService.resetPasswordWithCode(
+      email,
+      code,
+      newPassword,
+    );
   }
 }

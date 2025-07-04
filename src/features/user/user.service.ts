@@ -16,6 +16,8 @@ import { ConfigService } from '@nestjs/config';
 import { LoginResponseDto } from './dto/response/login-response.dto';
 import { randomInt } from 'crypto';
 import { EmailService } from 'src/shared/services/email.service';
+import { ProfileService } from '../profile/profile.service';
+import { RegisterResponseDto } from './dto/response/register-response.dto';
 
 @Injectable()
 export class UserService {
@@ -24,6 +26,7 @@ export class UserService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailService: EmailService,
+    private profileService: ProfileService,
   ) {}
 
   async validateUser(username: string, password: string): Promise<User> {
@@ -68,34 +71,47 @@ export class UserService {
     };
   }
 
-  async register(registerDto: RegisterDto): Promise<User> {
-    const { username, password } = registerDto;
+  async register(
+    registerDto: RegisterDto,
+    userId: number,
+  ): Promise<RegisterResponseDto> {
+    const { username, email, password } = registerDto;
 
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
-      where: { username },
+      where: { username, OR: [{ email }] },
     });
 
     if (existingUser) {
       throw new ForbiddenException('Username already exists');
     }
 
+    const profile = await this.profileService.create(
+      registerDto.profile,
+      userId,
+    );
+
     // Hash password
     // eslint-disable-next-line
     const hashedPassword: string = await bcrypt.hash(password, 10);
 
     // Create user
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
-        ...registerDto,
-        phone: registerDto.phone[0],
-        email: registerDto.email[0],
+        username,
+        email,
+        phone: registerDto.phone,
         password: hashedPassword,
         isActive: true,
-        roleId: 1,
-        profileId: 1,
+        roleId: registerDto.roleId,
+        profileId: profile.id,
+        createdById: userId,
+        updatedById: userId,
       },
+      include: { role: true, profile: true },
     });
+
+    return new RegisterResponseDto(user);
   }
 
   async refreshTokens(
@@ -155,12 +171,12 @@ export class UserService {
     return true;
   }
 
-  async sendPasswordResetCode(email: string): Promise<void> {
+  async sendPasswordResetCode(email: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new NotFoundException('User not found');
 
     const code = randomInt(100000, 999999).toString();
-    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     await this.prisma.user.update({
       where: { email },
@@ -176,19 +192,21 @@ export class UserService {
       `Your password reset code is: ${code}`,
       `<p>Your password reset code is: <b>${code}</b></p>`,
     );
+
+    return true;
   }
 
   async resetPasswordWithCode(
     email: string,
     code: string,
     newPassword: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (
       !user ||
       user.resetCode !== code ||
       !user.resetCodeExpiresAt ||
-      user.resetCodeExpiresAt < new Date()
+      user.resetCodeExpiresAt.getTime() < Date.now()
     ) {
       throw new BadRequestException('Invalid or expired code');
     }
@@ -204,12 +222,15 @@ export class UserService {
         resetCodeExpiresAt: null,
       },
     });
+
+    return true;
   }
 
   private async generateTokens(user: User, deviceId: string): Promise<Tokens> {
     const jwtPayload: JwtPayload = {
       sub: user.id,
       username: user.username,
+      profileId: user.profileId,
     };
 
     const [accessToken, refreshToken] = await Promise.all([

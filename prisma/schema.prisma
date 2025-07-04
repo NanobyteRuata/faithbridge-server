@@ -61,10 +61,6 @@ model User {
   createdProfiles Profile[] @relation("ProfileCreatedBy")
   updatedProfiles Profile[] @relation("ProfileUpdatedBy")
 
-  // ContactType relations
-  createdContactTypes ContactType[] @relation("ContactTypeCreatedBy")
-  updatedContactTypes ContactType[] @relation("ContactTypeUpdatedBy")
-
   // Household relations
   createdHouseholds Household[] @relation("HouseholdCreatedBy")
   updatedHouseholds Household[] @relation("HouseholdUpdatedBy")
@@ -167,9 +163,18 @@ model Profile {
   membershipId Int?
   membership   Membership? @relation(fields: [membershipId], references: [id], onDelete: Restrict)
 
-  emails   Email[]
-  phones   Phone[]
-  contacts Contact[]
+  personalEmail String?
+  workEmail     String?
+
+  personalPhone String?
+  workPhone     String?
+
+  otherContact1Type String?
+  otherContact1     String?
+  otherContact2Type String?
+  otherContact2     String?
+  otherContact3Type String?
+  otherContact3     String?
 
   householdId Int?
   household   Household? @relation(fields: [householdId], references: [id], onDelete: SetNull)
@@ -189,52 +194,20 @@ model Profile {
   updatedAt DateTime @updatedAt
 }
 
-model Phone {
-  id        Int     @id @default(autoincrement())
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  phone     String
-}
-
-model Email {
-  id        Int     @id @default(autoincrement())
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  email     String
-}
-
-model ContactType {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique
-  description String?
-  contacts    Contact[]
-
-  createdById Int?
-  createdBy   User? @relation("ContactTypeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-
-  updatedById Int?
-  updatedBy   User? @relation("ContactTypeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-
-  updatedAt DateTime? @updatedAt
-}
-
-model Contact {
-  id            Int         @id @default(autoincrement())
-  profileId     Int
-  profile       Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  contactTypeId Int
-  contactType   ContactType @relation(fields: [contactTypeId], references: [id], onDelete: Restrict)
-  value         String
-}
-
 model Address {
-  id         Int         @id @default(autoincrement())
-  profileId  Int
-  profile    Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  address    String
-  households Household[]
+  id Int @id @default(autoincrement())
+
+  household Household?
+  profiles  Profile[]
+
+  room     String?
+  building String?
+  street   String
+  township String
+  city     String
+  state    String
+  zip      String?
+  country  String
 }
 
 model Household {
@@ -246,8 +219,8 @@ model Household {
   isCurrent   Boolean
   profiles    Profile[]
 
-  addressId Int
-  address   Address @relation(fields: [addressId], references: [id], onDelete: Restrict)
+  addressId Int?     @unique
+  address   Address? @relation(fields: [addressId], references: [id], onDelete: SetNull)
 
   createdById Int?
   createdBy   User? @relation("HouseholdCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -262,7 +235,7 @@ model Household {
 
 model Membership {
   id          Int       @id @default(autoincrement())
-  name        String
+  name        String    @unique
   description String?
   profiles    Profile[]
 
