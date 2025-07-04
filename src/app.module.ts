@@ -6,6 +6,8 @@ import { HealthModule } from './core/health/health.module';
 import { AuthModule } from './core/auth/auth.module';
 import { RoleModule } from './features/role/role.module';
 import { ProfileModule } from './features/profile/profile.module';
+import { MembershipModule } from './features/membership/membership.module';
+import { StatusModule } from './features/status/status.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { ProfileModule } from './features/profile/profile.module';
     AuthModule,
     RoleModule,
     ProfileModule,
+    MembershipModule,
+    StatusModule,
   ],
 })
 export class AppModule {}

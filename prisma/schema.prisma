@@ -61,6 +61,10 @@ model User {
   createdProfiles Profile[] @relation("ProfileCreatedBy")
   updatedProfiles Profile[] @relation("ProfileUpdatedBy")
 
+  // Status relations
+  createdStatuses Status[] @relation("StatusCreatedBy")
+  updatedStatuses Status[] @relation("StatusUpdatedBy")
+
   // Household relations
   createdHouseholds Household[] @relation("HouseholdCreatedBy")
   updatedHouseholds Household[] @relation("HouseholdUpdatedBy")
@@ -156,7 +160,9 @@ model Profile {
   name     String
   lastName String?
   nickName String?
-  status   String  @default("Active")
+
+  statusId Int
+  status   Status @relation(fields: [statusId], references: [id], onDelete: Restrict)
 
   user User? @relation("UserProfile")
 
@@ -190,6 +196,24 @@ model Profile {
 
   updatedById Int?
   updatedBy   User? @relation("ProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  updatedAt DateTime @updatedAt
+}
+
+model Status {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+
+  profiles Profile[]
+
+  createdById Int?
+  createdBy   User? @relation("StatusCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("StatusUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   updatedAt DateTime @updatedAt
 }

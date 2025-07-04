@@ -52,8 +52,11 @@ export class RoleService {
         },
       },
     };
-    const roles = await this.prisma.role.findMany(args);
-    const total = await this.prisma.role.count({ where: args.where });
+
+    const [roles, total] = await this.prisma.$transaction([
+      this.prisma.role.findMany(args),
+      this.prisma.role.count({ where: args.where }),
+    ]);
 
     return {
       data: roles,

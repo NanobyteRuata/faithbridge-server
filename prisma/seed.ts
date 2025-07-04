@@ -53,6 +53,20 @@ async function main() {
   });
   
   console.log(`Created Admin role with ${createdPermissions.length} permissions`);
+
+
+  // Create Status entities
+  const status = ['Active', 'Inactive', 'Pending'];
+  for (const s of status) {
+    await prisma.status.create({
+      data: {
+        name: s,
+        description: `Status: ${s}`
+      }
+    });
+  }
+  
+  console.log(`Created ${status.length} statuses`);
   
   // Create default profile and admin user if not exists
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@faithbridge.com';
@@ -62,7 +76,9 @@ async function main() {
     const adminProfileData = {
       title: 'Mr',
       name: process.env.ADMIN_NAME || 'Admin',
-      status: 'Active'
+      status: {
+        connect: { id: 1 }
+      }
     }
 
     const adminProfile = await prisma.profile.create({
@@ -80,7 +96,7 @@ async function main() {
         password: hashedPassword,
         roleId: adminRole.id,
         profileId: adminProfile.id,
-        isActive: true
+        isActive: true,
       }
     });
     

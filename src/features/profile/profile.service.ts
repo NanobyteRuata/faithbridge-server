@@ -16,6 +16,10 @@ export class ProfileService {
         createdById: userId,
         updatedById: userId,
       },
+      include: {
+        status: true,
+        membership: true,
+      },
     });
   }
 
@@ -28,6 +32,10 @@ export class ProfileService {
           contains: search?.trim(),
           mode: 'insensitive',
         },
+      },
+      include: {
+        status: true,
+        membership: true,
       },
     };
 
@@ -48,7 +56,10 @@ export class ProfileService {
   }
 
   findOne(id: number) {
-    return this.prisma.profile.findUnique({ where: { id } });
+    return this.prisma.profile.findUnique({
+      where: { id },
+      include: { status: true, membership: true },
+    });
   }
 
   update(id: number, updateProfileDto: UpdateProfileDto, userId: number) {
@@ -57,6 +68,10 @@ export class ProfileService {
       data: {
         ...updateProfileDto,
         updatedById: userId,
+      },
+      include: {
+        status: true,
+        membership: true,
       },
     });
   }

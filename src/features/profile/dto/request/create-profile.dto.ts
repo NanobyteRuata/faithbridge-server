@@ -27,6 +27,9 @@ export class CreateProfileDto {
   @IsNumber()
   membershipId?: number;
 
+  @IsNumber()
+  statusId: number;
+
   @IsOptional()
   @IsEmail()
   personalEmail?: string;

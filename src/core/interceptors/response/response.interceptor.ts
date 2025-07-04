@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  NotFoundException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -17,6 +18,10 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
   ): Observable<ResponseDto<T> | PaginatedDto<T>> {
     return next.handle().pipe(
       map((data) => {
+        if (!data) {
+          throw new NotFoundException('Not Found');
+        }
+
         if (typeof data === 'object' && 'data' in data && 'meta' in data) {
           return data as PaginatedDto<T>;
         }
