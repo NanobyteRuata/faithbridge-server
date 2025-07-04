@@ -18,7 +18,6 @@ import { randomInt } from 'crypto';
 import { EmailService } from 'src/shared/services/email.service';
 import { ProfileService } from '../profile/profile.service';
 import { RegisterResponseDto } from './dto/response/register-response.dto';
-import { UserWithRoleAndPermissions } from './dto/response/login-response.dto';
 
 @Injectable()
 export class UserService {
@@ -33,7 +32,7 @@ export class UserService {
   async validateUser(
     username: string,
     password: string,
-  ): Promise<UserWithRoleAndPermissions> {
+  ): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { username },
       include: { role: { include: { permissions: true } } },
@@ -56,27 +55,23 @@ export class UserService {
   }
 
   async login(
-    user: UserWithRoleAndPermissions,
+    user: User,
     deviceId: string,
     userAgent?: string,
     ipAddress?: string,
   ): Promise<LoginResponseDto> {
-    const tokens = await this.generateTokens(user, deviceId);
+    const { accessToken, refreshToken } = await this.generateTokens(user, deviceId);
 
     // Store refresh token in database
     await this.storeRefreshToken(
       user.id,
-      tokens.refreshToken,
+      refreshToken,
       deviceId,
       userAgent,
       ipAddress,
     );
 
-    return {
-      ...tokens,
-      deviceId,
-      user,
-    };
+    return new LoginResponseDto(accessToken, refreshToken, user, deviceId);
   }
 
   async register(

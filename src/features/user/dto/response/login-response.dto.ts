@@ -1,12 +1,19 @@
-import { Permission, Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 
 export class LoginResponseDto {
   accessToken: string;
   refreshToken: string;
-  user: UserWithRoleAndPermissions;
+  user: User;
   deviceId: string;
-}
 
-export type UserWithRoleAndPermissions = User & {
-  role: Role & { permissions: Permission[] };
-};
+  constructor(accessToken: string, refreshToken: string, user: User, deviceId: string) {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
+    this.deviceId = deviceId;
+
+    // Exclude sensitive info
+    // eslint-disable-next-line
+    const { password, resetCode, resetCodeExpiresAt, ...rest } = user;
+    this.user = rest as User;
+  }
+}
