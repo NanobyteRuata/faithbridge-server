@@ -1,13 +1,45 @@
-import { RESOURCE_ACTIONS } from './actions.constant';
-import { RESOURCES } from './resources.constant';
-
-export const PERMISSIONS = Object.keys(RESOURCES).reduce(
-  (acc, resource) => {
-    acc[resource] = {};
-    for (const action of Object.values(RESOURCE_ACTIONS)) {
-      acc[resource][action] = `${action}:${resource}`;
-    }
-    return acc;
-  },
-  {} as Record<string, Record<string, string>>,
-);
+export enum PERMISSIONS {
+  USER__READ = 'Read all users',
+  USER__READ_SELF = 'Read self\'s user information',
+  USER__CREATE = 'Create user',
+  USER__UPDATE = 'Update user',
+  USER__UPDATE_SELF = 'Update self\'s user information',
+  USER__DELETE = 'Delete user',
+  PERMISSION__READ = 'Read all permissions',
+  PERMISSION__UPDATE = 'Update permission descriptions',
+  ROLE__READ = 'Read all roles',
+  ROLE__CREATE = 'Create role',
+  ROLE__UPDATE = 'Update role',
+  ROLE__DELETE = 'Delete role',
+  ACTIVITY_LOG__READ = 'Read all activity logs',
+  PROFILE__READ = 'Read all profiles',
+  PROFILE__READ_SELF = 'Read self\'s profile',
+  PROFILE__CREATE = 'Create profile',
+  PROFILE__UPDATE = 'Update profile',
+  PROFILE__UPDATE_SELF = 'Update self\'s profile',
+  PROFILE__DELETE = 'Delete profile',
+  STATUS__READ = 'Read all statuses',
+  STATUS__CREATE = 'Create status',
+  STATUS__UPDATE = 'Update status',
+  STATUS__DELETE = 'Delete status',
+  ADDRESS__READ = 'Read all addresses',
+  ADDRESS__CREATE = 'Create address',
+  ADDRESS__UPDATE = 'Update address',
+  ADDRESS__DELETE = 'Delete address',
+  HOUSEHOLD__READ = 'Read all households',
+  HOUSEHOLD__CREATE = 'Create household',
+  HOUSEHOLD__UPDATE = 'Update household',
+  HOUSEHOLD__DELETE = 'Delete household',
+  MEMBERSHIP__READ = 'Read all memberships',
+  MEMBERSHIP__CREATE = 'Create membership',
+  MEMBERSHIP__UPDATE = 'Update membership',
+  MEMBERSHIP__DELETE = 'Delete membership',
+  RELATIONSHIP_TYPE__READ = 'Read all relationship types',
+  RELATIONSHIP_TYPE__CREATE = 'Create relationship type',
+  RELATIONSHIP_TYPE__UPDATE = 'Update relationship type',
+  RELATIONSHIP_TYPE__DELETE = 'Delete relationship type',
+  RELATIONSHIP__READ = 'Read all relationships',
+  RELATIONSHIP__CREATE = 'Create relationship',
+  RELATIONSHIP__UPDATE = 'Update relationship',
+  RELATIONSHIP__DELETE = 'Delete relationship',
+}

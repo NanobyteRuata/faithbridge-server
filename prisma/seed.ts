@@ -1,6 +1,5 @@
 import { Permission, PrismaClient } from '@prisma/client';
-import { RESOURCE_ACTIONS } from '../src/shared/constants/actions.constant';
-import { RESOURCES } from '../src/shared/constants/resources.constant';
+import { PERMISSIONS } from '../src/shared/constants/permissions.constant';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 
@@ -10,31 +9,30 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding permissions...');
-  
+
   const createdPermissions: Permission[] = [];
   // Create permissions for each resource-action pair
-  for (const resource of Object.values(RESOURCES)) {
-    for (const action of Object.values(RESOURCE_ACTIONS)) {
-      const permission = await prisma.permission.upsert({
-        where: { 
-          action_resource: { 
-            action: action,
-            resource: resource
-          }
-        },
-        update: {}, // No updates if exists
-        create: {
-          action: action,
-          resource: resource,
-          description: `Permission to ${action.toLowerCase()} ${resource.toLowerCase()}`
+  for (const [resource__actions, description] of Object.entries(PERMISSIONS)) {
+    const [resource, action] = resource__actions.split('__');
+    const permission = await prisma.permission.upsert({
+      where: {
+        action_resource: {
+          action,
+          resource
         }
-      });
-      createdPermissions.push(permission);
-    }
+      },
+      update: {},
+      create: {
+        action,
+        resource,
+        description
+      }
+    })
+    createdPermissions.push(permission);
   }
-  
+
   console.log(`Created ${createdPermissions.length} permissions`);
-  
+
   // Create Admin role with all permissions
   const adminRoleName = process.env.ADMIN_ROLE_NAME || 'Admin';
   const adminRole = await prisma.role.upsert({
@@ -51,7 +49,7 @@ async function main() {
       }
     }
   });
-  
+
   console.log(`Created Admin role with ${createdPermissions.length} permissions`);
 
 
@@ -65,9 +63,9 @@ async function main() {
       }
     });
   }
-  
+
   console.log(`Created ${status.length} statuses`);
-  
+
   // Create default profile and admin user if not exists
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@faithbridge.com';
   const adminPhone = process.env.ADMIN_PHONE;
@@ -84,7 +82,7 @@ async function main() {
     const adminProfile = await prisma.profile.create({
       data: adminProfileData
     });
-    
+
     // Create admin user
     const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 10);
     const adminUsername = process.env.ADMIN_USERNAME || 'admin';
@@ -99,7 +97,7 @@ async function main() {
         isActive: true,
       }
     });
-    
+
     console.log('Created admin user');
   }
 

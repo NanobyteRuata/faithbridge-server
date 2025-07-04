@@ -26,7 +26,7 @@ export class MembershipController {
   constructor(private readonly membershipService: MembershipService) {}
 
   @Post()
-  @Permissions(PERMISSIONS.MEMBERSHIP.CREATE)
+  @Permissions(PERMISSIONS.MEMBERSHIP__CREATE)
   create(
     @Req() req: JwtAuthRequest,
     @Body() createMembershipDto: CreateMembershipDto,
@@ -35,19 +35,19 @@ export class MembershipController {
   }
 
   @Get()
-  @Permissions(PERMISSIONS.MEMBERSHIP.READ)
+  @Permissions(PERMISSIONS.MEMBERSHIP__READ)
   findAll(@Query() query: GetMembershipsDto) {
     return this.membershipService.findAll(query);
   }
 
   @Get(':id')
-  @Permissions(PERMISSIONS.MEMBERSHIP.READ)
+  @Permissions(PERMISSIONS.MEMBERSHIP__READ)
   findOne(@Param('id') id: string) {
     return this.membershipService.findOne(+id);
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.MEMBERSHIP.UPDATE)
+  @Permissions(PERMISSIONS.MEMBERSHIP__UPDATE)
   update(
     @Param('id') id: string,
     @Req() req: JwtAuthRequest,
@@ -61,7 +61,7 @@ export class MembershipController {
   }
 
   @Delete(':id')
-  @Permissions(PERMISSIONS.MEMBERSHIP.DELETE)
+  @Permissions(PERMISSIONS.MEMBERSHIP__DELETE)
   remove(@Param('id') id: string, @Req() req: JwtAuthRequest) {
     return this.membershipService.remove(+id, req.user.sub);
   }

@@ -26,25 +26,25 @@ export class StatusController {
   constructor(private readonly statusService: StatusService) {}
 
   @Post()
-  @Permissions(PERMISSIONS.STATUS.CREATE)
+  @Permissions(PERMISSIONS.STATUS__CREATE)
   create(@Body() createStatusDto: CreateStatusDto, @Req() req: JwtAuthRequest) {
     return this.statusService.create(createStatusDto, req.user.sub);
   }
 
   @Get()
-  @Permissions(PERMISSIONS.STATUS.READ)
+  @Permissions(PERMISSIONS.STATUS__READ)
   findAll(@Query() query: GetStatusesDto) {
     return this.statusService.findAll(query);
   }
 
   @Get(':id')
-  @Permissions(PERMISSIONS.STATUS.READ)
+  @Permissions(PERMISSIONS.STATUS__READ)
   findOne(@Param('id') id: string) {
     return this.statusService.findOne(+id);
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.STATUS.UPDATE)
+  @Permissions(PERMISSIONS.STATUS__UPDATE)
   update(
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateStatusDto,
@@ -54,7 +54,7 @@ export class StatusController {
   }
 
   @Delete(':id')
-  @Permissions(PERMISSIONS.STATUS.DELETE)
+  @Permissions(PERMISSIONS.STATUS__DELETE)
   remove(@Param('id') id: string, @Req() req: JwtAuthRequest) {
     return this.statusService.remove(+id, req.user.sub);
   }

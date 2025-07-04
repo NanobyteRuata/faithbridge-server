@@ -26,7 +26,7 @@ export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Post()
-  @Permissions(PERMISSIONS.PROFILE.CREATE)
+  @Permissions(PERMISSIONS.PROFILE__CREATE)
   create(
     @Req() req: JwtAuthRequest,
     @Body() createProfileDto: CreateProfileDto,
@@ -35,19 +35,19 @@ export class ProfileController {
   }
 
   @Get()
-  @Permissions(PERMISSIONS.PROFILE.READ)
+  @Permissions(PERMISSIONS.PROFILE__READ)
   findAll(@Query() query: GetProfilesDto) {
     return this.profileService.findAll(query);
   }
 
   @Get(':id')
-  @Permissions(PERMISSIONS.PROFILE.READ)
+  @Permissions(PERMISSIONS.PROFILE__READ)
   findOne(@Param('id') id: string) {
     return this.profileService.findOne(+id);
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.PROFILE.UPDATE)
+  @Permissions(PERMISSIONS.PROFILE__UPDATE)
   update(
     @Param('id') id: string,
     @Req() req: JwtAuthRequest,
@@ -57,7 +57,7 @@ export class ProfileController {
   }
 
   @Delete(':id')
-  @Permissions(PERMISSIONS.PROFILE.DELETE)
+  @Permissions(PERMISSIONS.PROFILE__DELETE)
   remove(@Req() req: JwtAuthRequest, @Param('id') id: string) {
     return this.profileService.remove(+id, req.user.sub);
   }

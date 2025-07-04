@@ -26,31 +26,31 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Get('permissions')
-  @Permissions(PERMISSIONS.ROLE.READ)
+  @Permissions(PERMISSIONS.ROLE__READ)
   findAllPermissions() {
     return this.roleService.findAllPermissions();
   }
 
   @Post()
-  @Permissions(PERMISSIONS.ROLE.CREATE)
+  @Permissions(PERMISSIONS.ROLE__CREATE)
   createRole(@Req() req: JwtAuthRequest, @Body() createRoleDto: CreateRoleDto) {
     return this.roleService.createRole(createRoleDto, req.user.sub);
   }
 
   @Get()
-  @Permissions(PERMISSIONS.ROLE.READ)
+  @Permissions(PERMISSIONS.ROLE__READ)
   findAllRoles(@Query() query: GetRolesDto) {
     return this.roleService.findAllRoles(query);
   }
 
   @Get(':id')
-  @Permissions(PERMISSIONS.ROLE.READ)
+  @Permissions(PERMISSIONS.ROLE__READ)
   findOneRole(@Param('id') id: string) {
     return this.roleService.findOneRole(+id);
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.ROLE.UPDATE)
+  @Permissions(PERMISSIONS.ROLE__UPDATE)
   updateRole(
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateRoleDto,
@@ -60,7 +60,7 @@ export class RoleController {
   }
 
   @Delete(':id')
-  @Permissions(PERMISSIONS.ROLE.DELETE)
+  @Permissions(PERMISSIONS.ROLE__DELETE)
   removeRole(@Param('id') id: string, @Req() req: JwtAuthRequest) {
     return this.roleService.removeRole(+id, req.user.sub);
   }
