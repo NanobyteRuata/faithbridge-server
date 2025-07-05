@@ -328,6 +328,7 @@ model AccessCode {
   hashedCode String @unique
 
   permissions Permission[]
+  expireDate  DateTime?
   isActive    Boolean      @default(false)
 
   createdById Int?
