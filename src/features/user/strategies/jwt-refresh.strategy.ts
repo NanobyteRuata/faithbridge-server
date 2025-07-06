@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import { JwtPayload } from '../../../core/auth/interfaces/jwt-payload.interface';
+import { JwtUserPayload } from '../../../core/auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -21,7 +21,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  validate(req: Request, payload: JwtPayload & { deviceId: string }) {
+  validate(req: Request, payload: JwtUserPayload & { deviceId: string }) {
     // eslint-disable-next-line
     const refreshToken = req.body.refreshToken as string;
     return {

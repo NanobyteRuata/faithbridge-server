@@ -8,7 +8,7 @@ import {
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { JwtPayload } from '../../core/auth/interfaces/jwt-payload.interface';
+import { JwtUserPayload } from '../../core/auth/interfaces/jwt-payload.interface';
 import { Tokens } from './interface/tokens.interface';
 import { RegisterDto } from './dto/request/register.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -29,10 +29,7 @@ export class UserService {
     private profileService: ProfileService,
   ) {}
 
-  async validateUser(
-    username: string,
-    password: string,
-  ): Promise<User> {
+  async validateUser(username: string, password: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { username },
       include: { role: { include: { permissions: true } } },
@@ -60,7 +57,10 @@ export class UserService {
     userAgent?: string,
     ipAddress?: string,
   ): Promise<LoginResponseDto> {
-    const { accessToken, refreshToken } = await this.generateTokens(user, deviceId);
+    const { accessToken, refreshToken } = await this.generateTokens(
+      user,
+      deviceId,
+    );
 
     // Store refresh token in database
     await this.storeRefreshToken(
@@ -230,10 +230,11 @@ export class UserService {
   }
 
   private async generateTokens(user: User, deviceId: string): Promise<Tokens> {
-    const jwtPayload: JwtPayload = {
+    const jwtPayload: JwtUserPayload = {
       sub: user.id,
       username: user.username,
       profileId: user.profileId,
+      type: 'jwt',
     };
 
     const [accessToken, refreshToken] = await Promise.all([

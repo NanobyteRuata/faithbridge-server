@@ -8,6 +8,7 @@ import { RoleModule } from './features/role/role.module';
 import { ProfileModule } from './features/profile/profile.module';
 import { MembershipModule } from './features/membership/membership.module';
 import { StatusModule } from './features/status/status.module';
+import { AccessCodeModule } from './features/access-code/access-code.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { StatusModule } from './features/status/status.module';
     ProfileModule,
     MembershipModule,
     StatusModule,
+    AccessCodeModule,
   ],
 })
 export class AppModule {}

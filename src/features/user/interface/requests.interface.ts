@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { User } from '@prisma/client';
 
 // For local strategy requests
 export interface LocalAuthRequest {

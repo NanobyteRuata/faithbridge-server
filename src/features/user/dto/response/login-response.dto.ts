@@ -6,7 +6,12 @@ export class LoginResponseDto {
   user: User;
   deviceId: string;
 
-  constructor(accessToken: string, refreshToken: string, user: User, deviceId: string) {
+  constructor(
+    accessToken: string,
+    refreshToken: string,
+    user: User,
+    deviceId: string,
+  ) {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
     this.deviceId = deviceId;

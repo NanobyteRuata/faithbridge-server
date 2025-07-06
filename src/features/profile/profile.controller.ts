@@ -19,13 +19,14 @@ import { JwtAuthRequest } from '../user/interface/requests.interface';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
 @Controller('profile')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.PROFILE__CREATE)
   create(
     @Req() req: JwtAuthRequest,
@@ -35,18 +36,21 @@ export class ProfileController {
   }
 
   @Get()
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.PROFILE__READ)
   findAll(@Query() query: GetProfilesDto) {
     return this.profileService.findAll(query);
   }
 
   @Get(':id')
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.PROFILE__READ)
   findOne(@Param('id') id: string) {
     return this.profileService.findOne(+id);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.PROFILE__UPDATE)
   update(
     @Param('id') id: string,
@@ -57,6 +61,7 @@ export class ProfileController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.PROFILE__DELETE)
   remove(@Req() req: JwtAuthRequest, @Param('id') id: string) {
     return this.profileService.remove(+id, req.user.sub);
