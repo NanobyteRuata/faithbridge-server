@@ -87,6 +87,7 @@ export class AccessCodeService {
       },
     });
 
+    // eslint-disable-next-line
     const { hashedCode, ...restEntity } = accessCodeEntity;
 
     return restEntity;
