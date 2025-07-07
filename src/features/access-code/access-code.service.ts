@@ -3,6 +3,8 @@ import { CreateAccessCodeDto } from './dto/request/create-access-code.dto';
 import { UpdateAccessCodeDto } from './dto/request/update-access-code.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { GetAccessCodesDto } from './dto/query/get-access-codes.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AccessCodeService {
@@ -29,8 +31,32 @@ export class AccessCodeService {
     });
   }
 
-  findAll() {
-    return this.prisma.accessCode.findMany();
+  async findAll({ skip, limit, search }: GetAccessCodesDto) {
+    const args: Prisma.AccessCodeFindManyArgs = {
+      skip,
+      take: limit,
+      where: {
+        name: {
+          contains: search?.trim(),
+          mode: 'insensitive',
+        },
+      },
+    };
+
+    const [accessCodes, total] = await this.prisma.$transaction([
+      this.prisma.accessCode.findMany(args),
+      this.prisma.accessCode.count({ where: args.where }),
+    ]);
+
+    return {
+      data: accessCodes,
+      meta: {
+        page: skip,
+        limit,
+        total,
+      },
+      success: true,
+    };
   }
 
   findOne(id: number) {
@@ -42,7 +68,7 @@ export class AccessCodeService {
     updateAccessCodeDto: UpdateAccessCodeDto,
     userId: number,
   ) {
-    const { code } = updateAccessCodeDto;
+    const { code, ...rest } = updateAccessCodeDto;
 
     // eslint-disable-next-line
     const hashedCode = (await bcrypt.hash(code, 10)) as string;
@@ -50,7 +76,7 @@ export class AccessCodeService {
     return this.prisma.accessCode.update({
       where: { id },
       data: {
-        ...updateAccessCodeDto,
+        ...rest,
         permissions: {
           set: updateAccessCodeDto.permissions?.map((permissionId) => ({
             id: permissionId,

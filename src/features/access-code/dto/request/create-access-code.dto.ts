@@ -13,6 +13,10 @@ export class CreateAccessCodeDto {
   @IsNotEmpty()
   code: string;
 
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
   @IsArray()
   @IsNumber({}, { each: true })
   permissions: number[];

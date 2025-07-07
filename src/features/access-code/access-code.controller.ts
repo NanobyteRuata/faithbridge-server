@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Req,
+  Query,
 } from '@nestjs/common';
 import { AccessCodeService } from './access-code.service';
 import { CreateAccessCodeDto } from './dto/request/create-access-code.dto';
@@ -17,6 +18,7 @@ import { JwtAuthRequest } from '../user/interface/requests.interface';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { GetAccessCodesDto } from './dto/query/get-access-codes.dto';
 
 @Controller('access-code')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -34,8 +36,8 @@ export class AccessCodeController {
 
   @Get()
   @Permissions(PERMISSIONS.ACCESS_CODE__READ)
-  findAll() {
-    return this.accessCodeService.findAll();
+  findAll(@Query() query: GetAccessCodesDto) {
+    return this.accessCodeService.findAll(query);
   }
 
   @Get(':id')

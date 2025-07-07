@@ -290,7 +290,6 @@ model RelationshipType {
   inverseRelationshipTypeId Int?              @unique
   inverseRelationshipType   RelationshipType? @relation("InverseRelationshipType", fields: [inverseRelationshipTypeId], references: [id], onDelete: SetNull)
   inverseOf                 RelationshipType? @relation("InverseRelationshipType")
-  isBidirectional           Boolean           @default(false)
 
   createdById Int?
   createdBy   User? @relation("RelationshipTypeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -321,10 +320,13 @@ model Relationship {
   updatedBy   User? @relation("RelationshipUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   updatedAt DateTime @updatedAt
+
+  @@unique([profileId, relatedProfileId], name: "profile_related")
 }
 
 model AccessCode {
   id         Int    @id @default(autoincrement())
+  name       String
   hashedCode String @unique
 
   permissions Permission[]
