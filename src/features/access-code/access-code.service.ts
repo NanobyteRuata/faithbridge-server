@@ -68,24 +68,28 @@ export class AccessCodeService {
     updateAccessCodeDto: UpdateAccessCodeDto,
     userId: number,
   ) {
-    const { code, ...rest } = updateAccessCodeDto;
+    const { code, ...restDto } = updateAccessCodeDto;
 
     // eslint-disable-next-line
-    const hashedCode = (await bcrypt.hash(code, 10)) as string;
+    const newHashedCode = (await bcrypt.hash(code, 10)) as string;
 
-    return this.prisma.accessCode.update({
+    const accessCodeEntity = await this.prisma.accessCode.update({
       where: { id },
       data: {
-        ...rest,
+        ...restDto,
         permissions: {
           set: updateAccessCodeDto.permissions?.map((permissionId) => ({
             id: permissionId,
           })),
         },
-        hashedCode,
+        hashedCode: newHashedCode,
         updatedById: userId,
       },
     });
+
+    const { hashedCode, ...restEntity } = accessCodeEntity;
+
+    return restEntity;
   }
 
   async remove(id: number, userId: number) {

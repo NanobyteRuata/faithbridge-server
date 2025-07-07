@@ -10,6 +10,7 @@ import { MembershipModule } from './features/membership/membership.module';
 import { StatusModule } from './features/status/status.module';
 import { AccessCodeModule } from './features/access-code/access-code.module';
 import { RelationshipModule } from './features/relationship/relationship.module';
+import { AddressModule } from './features/address/address.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RelationshipModule } from './features/relationship/relationship.module'
     StatusModule,
     AccessCodeModule,
     RelationshipModule,
+    AddressModule,
   ],
 })
 export class AppModule {}

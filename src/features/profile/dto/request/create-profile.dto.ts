@@ -69,4 +69,8 @@ export class CreateProfileDto {
   @IsOptional()
   @IsString()
   otherContact3?: string;
+
+  @IsOptional()
+  @IsNumber()
+  addressId?: number;
 }

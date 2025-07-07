@@ -26,7 +26,7 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Get('permissions')
-  @Permissions(PERMISSIONS.ROLE__READ)
+  @Permissions(PERMISSIONS.PERMISSION__READ)
   findAllPermissions() {
     return this.roleService.findAllPermissions();
   }

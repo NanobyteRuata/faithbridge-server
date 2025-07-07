@@ -22,10 +22,10 @@ export class AccessCodeStrategy extends PassportStrategy(
       include: { permissions: true },
     });
     for (const entity of accessCodeEntities) {
-      const { id, expireDate, hashedCode, permissions } = entity;
+      const { id, expireDate, hashedCode, permissions, isActive } = entity;
 
       const isExpired = expireDate && Date.now() > expireDate.getTime();
-      if (isExpired) continue;
+      if (isExpired || !isActive) continue;
 
       // eslint-disable-next-line
       const isValid = await bcrypt.compare(accessCode, hashedCode);
