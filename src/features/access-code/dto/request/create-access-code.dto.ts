@@ -1,5 +1,4 @@
 import {
-  IsArray,
   IsBoolean,
   IsDate,
   IsNotEmpty,
@@ -17,9 +16,9 @@ export class CreateAccessCodeDto {
   @IsNotEmpty()
   name: string;
 
-  @IsArray()
-  @IsNumber({}, { each: true })
-  permissions: number[];
+  @IsNumber()
+  @IsNotEmpty()
+  roleId: number;
 
   @IsOptional()
   @IsDate()

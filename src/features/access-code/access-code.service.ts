@@ -19,11 +19,6 @@ export class AccessCodeService {
     return this.prisma.accessCode.create({
       data: {
         ...rest,
-        permissions: {
-          connect: createAccessCodeDto.permissions.map((permissionId) => ({
-            id: permissionId,
-          })),
-        },
         hashedCode,
         createdById: userId,
         updatedById: userId,
@@ -70,21 +65,20 @@ export class AccessCodeService {
   ) {
     const { code, ...restDto } = updateAccessCodeDto;
 
-    // eslint-disable-next-line
-    const newHashedCode = (await bcrypt.hash(code, 10)) as string;
+    const updatedData = {
+      ...restDto,
+      updatedById: userId,
+    };
+
+    if (code) {
+      // eslint-disable-next-line
+      const newHashedCode = (await bcrypt.hash(code, 10)) as string;
+      updatedData['hashedCode'] = newHashedCode;
+    }
 
     const accessCodeEntity = await this.prisma.accessCode.update({
       where: { id },
-      data: {
-        ...restDto,
-        permissions: {
-          set: updateAccessCodeDto.permissions?.map((permissionId) => ({
-            id: permissionId,
-          })),
-        },
-        hashedCode: newHashedCode,
-        updatedById: userId,
-      },
+      data: updatedData,
     });
 
     // eslint-disable-next-line

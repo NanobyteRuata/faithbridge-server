@@ -4,6 +4,7 @@ import { Strategy as CustomStrategy } from 'passport-custom';
 import { Request } from 'express';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { AccessCodeUserPayload } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AccessCodeStrategy extends PassportStrategy(
@@ -14,17 +15,18 @@ export class AccessCodeStrategy extends PassportStrategy(
     super();
   }
 
-  async validate(req: Request): Promise<any> {
+  async validate(req: Request): Promise<AccessCodeUserPayload> {
     const accessCode = (req.headers['x-access-code'] ||
       req.query.accessCode) as string;
     if (!accessCode) throw new UnauthorizedException('Access code required');
     const accessCodeEntities = await this.prisma.accessCode.findMany({
-      include: { permissions: true },
+      include: { role: { include: { permissions: true } } },
     });
     for (const entity of accessCodeEntities) {
-      const { id, expireDate, hashedCode, permissions, isActive } = entity;
+      const { id, expireDate, hashedCode, role, isActive } = entity;
 
-      const isExpired = expireDate && Date.now() > expireDate.getTime();
+      const isExpired =
+        (expireDate && Date.now() > expireDate.getTime()) ?? false;
       if (isExpired || !isActive) continue;
 
       // eslint-disable-next-line
@@ -32,7 +34,9 @@ export class AccessCodeStrategy extends PassportStrategy(
       if (isValid) {
         return {
           id,
-          permissions: permissions.map((p) => p.resource + '__' + p.action),
+          permissions: role.permissions.map(
+            (p) => p.resource + '__' + p.action,
+          ),
           type: 'accessCode',
         };
       }

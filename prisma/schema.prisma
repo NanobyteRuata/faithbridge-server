@@ -92,8 +92,7 @@ model Permission {
   resource    String
   description String?
 
-  roles       Role[]
-  accessCodes AccessCode[]
+  roles Role[]
 
   createdById Int?
   createdBy   User? @relation("PermissionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -113,6 +112,7 @@ model Role {
   name        String       @unique
   permissions Permission[]
   users       User[]
+  accessCodes AccessCode[]
 
   createdById Int?
   createdBy   User? @relation("RoleCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -329,17 +329,17 @@ model AccessCode {
   name       String
   hashedCode String @unique
 
-  permissions Permission[]
-  expireDate  DateTime?
-  isActive    Boolean      @default(false)
+  roleId Int
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  expireDate DateTime?
+  isActive   Boolean   @default(false)
 
   createdById Int?
   createdBy   User? @relation("AccessCodeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now())
-
+  createdAt   DateTime @default(now())
   updatedById Int?
-  updatedBy   User? @relation("AccessCodeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-
-  updatedAt DateTime @updatedAt
+  updatedBy   User?    @relation("AccessCodeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime @updatedAt
 }

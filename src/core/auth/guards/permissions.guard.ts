@@ -30,21 +30,22 @@ export class PermissionsGuard implements CanActivate {
 
     // eslint-disable-next-line
     const request = context.switchToHttp().getRequest() as { user: JwtUserPayload | AccessCodeUserPayload };
-    const user = request.user;
+    const userOrAccess = request.user;
 
-    if (!user) {
+    if (!userOrAccess) {
       throw new ForbiddenException('No user found in request');
     }
 
     let permissions: string[] = [];
-    if (user.type === 'accessCode') {
-      permissions = user.permissions;
+    if (userOrAccess.type === 'accessCode') {
+      permissions = userOrAccess.permissions;
     }
+    console.log(permissions);
 
-    if (user.type === 'jwt') {
+    if (userOrAccess.type === 'jwt') {
       // Get user's permissions from DB (or from JWT if you store them there)
       const dbUser = await this.prisma.user.findUnique({
-        where: { id: user.sub },
+        where: { id: userOrAccess.sub },
         include: {
           role: { include: { permissions: true } },
         },
