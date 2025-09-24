@@ -4,8 +4,12 @@ services:
   api:
     build: .
     ports:
-      - "${APP_PORT}:3000"
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules  # Prevent overwriting node_modules
     environment:
+      - NODE_ENV=development
       - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN}
       - DATABASE_URL=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@db:${DATABASE_PORT}/${DATABASE_DB}
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}

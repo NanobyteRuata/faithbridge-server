@@ -1,26 +1,19 @@
-# --- Builder Stage ---
-FROM node:22-alpine AS builder
+FROM node:22-alpine
+
 WORKDIR /app
 
+# Install dependencies
 COPY package*.json ./
 RUN npm install
 
+# Copy the rest of the source
 COPY . .
-COPY prisma ./prisma
+
+# Generate Prisma client
 RUN npx prisma generate
-RUN npm run build
 
-# --- Production Stage ---
-FROM node:22-alpine
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install --only=production
-
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
-
+# Expose port
 EXPOSE 3000
-CMD ["node", "dist/src/main.js"]
+
+# Start NestJS in watch mode
+CMD ["npm", "run", "start:dev"]
