@@ -13,20 +13,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Organization {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  users             User[]
+  roles             Role[]
+  permissions       Permission[]
+  profiles          Profile[]
+  households        Household[]
+  memberships       Membership[]
+  statuses          Status[]
+  addresses         Address[]
+  activityLogs      ActivityLog[]
+  relationshipTypes RelationshipType[]
+  relationships     Relationship[]
+  accessCodes       AccessCode[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model User {
-  id                 Int       @id @default(autoincrement())
-  email              String    @unique
-  phone              String?   @unique
-  username           String    @unique
+  id             Int           @id @default(autoincrement())
+  organizationId Int?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  email              String
+  phone              String?
+  username           String
   password           String
   resetCode          String?
   resetCodeExpiresAt DateTime?
-  isActive           Boolean
+  isActive           Boolean   @default(true)
+  isSuperAdmin       Boolean   @default(false)
 
   sessions Session[]
 
-  roleId Int
-  role   Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  roleId Int?
+  role   Role? @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
   profileId Int     @unique
   profile   Profile @relation("UserProfile", fields: [profileId], references: [id], onDelete: Restrict)
@@ -84,10 +109,18 @@ model User {
   // AccessCode relations
   createdAccessCodes AccessCode[] @relation("AccessCodeCreatedBy")
   updatedAccessCodes AccessCode[] @relation("AccessCodeUpdatedBy")
+
+  @@unique([email, organizationId])
+  @@unique([phone, organizationId])
+  @@unique([username, organizationId])
+  @@index([organizationId])
 }
 
 model Permission {
-  id          Int     @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   action      String
   resource    String
   description String?
@@ -104,15 +137,20 @@ model Permission {
 
   updatedAt DateTime? @updatedAt
 
-  @@unique([action, resource], name: "action_resource")
+  @@unique([action, resource, organizationId], name: "action_resource_org")
+  @@index([organizationId])
 }
 
 model Role {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
+  id             Int           @id @default(autoincrement())
+  organizationId Int?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name        String
   permissions Permission[]
   users       User[]
   accessCodes AccessCode[]
+  isSuperRole Boolean      @default(false)
 
   createdById Int?
   createdBy   User? @relation("RoleCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -123,10 +161,16 @@ model Role {
   updatedBy   User? @relation("RoleUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   updatedAt DateTime? @updatedAt
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
 }
 
 model ActivityLog {
-  id          Int     @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   actorId     Int
   actor       User    @relation(fields: [actorId], references: [id], onDelete: Cascade)
   action      String
@@ -144,6 +188,8 @@ model ActivityLog {
   updatedBy   User? @relation("ActivityLogUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   updatedAt DateTime? @updatedAt
+
+  @@index([organizationId])
 }
 
 model Session {
@@ -160,14 +206,17 @@ model Session {
 }
 
 model Profile {
-  id       Int     @id @default(autoincrement())
+  id             Int           @id @default(autoincrement())
+  organizationId Int?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   title    String
   name     String
   lastName String?
   nickName String?
 
-  statusId Int
-  status   Status @relation(fields: [statusId], references: [id], onDelete: Restrict)
+  statusId Int?
+  status   Status? @relation(fields: [statusId], references: [id], onDelete: SetNull)
 
   user User? @relation("UserProfile")
 
@@ -204,11 +253,16 @@ model Profile {
   updatedBy   User? @relation("ProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
 }
 
 model Status {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name        String
   description String?
 
   profiles Profile[]
@@ -222,10 +276,14 @@ model Status {
   updatedBy   User? @relation("StatusUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   updatedAt DateTime @updatedAt
+
+  @@unique([name, organizationId])
 }
 
 model Address {
-  id Int @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   household Household?
   profiles  Profile[]
@@ -238,10 +296,15 @@ model Address {
   state    String
   zip      String?
   country  String
+
+  @@index([organizationId])
 }
 
 model Household {
-  id            Int       @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   name          String
   description   String?
   headProfileId Int?      @unique
@@ -263,8 +326,11 @@ model Household {
 }
 
 model Membership {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name        String
   description String?
   profiles    Profile[]
 
@@ -277,19 +343,24 @@ model Membership {
   updatedBy   User? @relation("MembershipUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   updatedAt DateTime @updatedAt
+
+  @@unique([name, organizationId])
 }
 
 model RelationshipType {
-  id          Int     @id @default(autoincrement())
-  code        String  @unique
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  code        String
   name        String
   description String?
 
   relationships Relationship[]
 
-  inverseRelationshipTypeId Int?              @unique
-  inverseRelationshipType   RelationshipType? @relation("InverseRelationshipType", fields: [inverseRelationshipTypeId], references: [id], onDelete: SetNull)
-  inverseOf                 RelationshipType? @relation("InverseRelationshipType")
+  inverseRelationshipTypeId Int?
+  inverseRelationshipType   RelationshipType?  @relation("InverseRelationshipType", fields: [inverseRelationshipTypeId], references: [id], onDelete: SetNull)
+  inverseOf                 RelationshipType[] @relation("InverseRelationshipType")
 
   createdById Int?
   createdBy   User? @relation("RelationshipTypeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -300,10 +371,15 @@ model RelationshipType {
   updatedBy   User? @relation("RelationshipTypeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   updatedAt DateTime @updatedAt
+
+  @@unique([code, organizationId])
 }
 
 model Relationship {
-  id                 Int              @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   profileId          Int
   profile            Profile          @relation("ProfileRelationship", fields: [profileId], references: [id], onDelete: Cascade)
   relatedProfileId   Int
@@ -325,7 +401,10 @@ model Relationship {
 }
 
 model AccessCode {
-  id         Int    @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   name       String
   hashedCode String @unique
 
@@ -342,4 +421,6 @@ model AccessCode {
   updatedById Int?
   updatedBy   User?    @relation("AccessCodeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
+
+  @@unique([hashedCode, organizationId])
 }

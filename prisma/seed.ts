@@ -1,114 +1,58 @@
-import { Permission, PrismaClient } from '@prisma/client';
-import { PERMISSIONS } from '../src/shared/constants/permissions.constant';
+import { PrismaClient } from '@prisma/client'
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
-
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
 async function main() {
-  console.log('Seeding permissions...');
+  const email = process.env.SUPER_ADMIN_EMAIL
+  const phone = process.env.SUPER_ADMIN_PHONE
+  const username = process.env.SUPER_ADMIN_USERNAME
+  const password = process.env.SUPER_ADMIN_PASSWORD
 
-  const createdPermissions: Permission[] = [];
-  // Create permissions for each resource-action pair
-  for (const [resource__actions, description] of Object.entries(PERMISSIONS)) {
-    const [resource, action] = resource__actions.split('__');
-    const permission = await prisma.permission.upsert({
-      where: {
-        action_resource: {
-          action,
-          resource
-        }
-      },
-      update: {},
-      create: {
-        action,
-        resource,
-        description
-      }
-    })
-    createdPermissions.push(permission);
+  if (!email || !phone || !username || !password) {
+    throw new Error('❌ Some required ENVs not found');
   }
 
-  console.log(`Created ${createdPermissions.length} permissions`);
+  // Check if user already exists
+  const existing = await prisma.user.findFirst({
+    where: { email, isSuperAdmin: true },
+  })
 
-  // Create Admin role with all permissions
-  const adminRoleName = process.env.ADMIN_ROLE_NAME || 'Admin';
-  const adminRole = await prisma.role.upsert({
-    where: { name: adminRoleName },
-    update: {
-      permissions: {
-        connect: createdPermissions.map(p => ({ id: p.id }))
-      }
-    },
-    create: {
-      name: adminRoleName,
-      permissions: {
-        connect: createdPermissions.map(p => ({ id: p.id }))
-      }
+  if (existing) {
+    console.log('✅ Super admin already exists.')
+    return
+  }
+
+  const superAdminProfile = await prisma.profile.create({
+    data: {
+      title: 'Mr.',
+      name: process.env.SUPER_ADMIN_NAME ?? 'Admin'
     }
   });
 
-  console.log(`Created Admin role with ${createdPermissions.length} permissions`);
+  const hashedPassword = await bcrypt.hash(password, 10)
 
+  const superAdmin = await prisma.user.create({
+    data: {
+      email,
+      phone,
+      username,
+      password: hashedPassword,
+      isSuperAdmin: true,
+      isActive: true,
+      profileId: superAdminProfile.id
+    },
+  })
 
-  // Create Status entities
-  const status = ['Active', 'Inactive', 'Pending'];
-  for (const s of status) {
-    await prisma.status.create({
-      data: {
-        name: s,
-        description: `Status: ${s}`
-      }
-    });
-  }
-
-  console.log(`Created ${status.length} statuses`);
-
-  // Create default profile and admin user if not exists
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@faithbridge.com';
-  const adminPhone = process.env.ADMIN_PHONE;
-  const adminUser = await prisma.user.findUnique({ where: { email: adminEmail, phone: adminPhone } });
-  if (!adminUser) {
-    const adminProfileData = {
-      title: 'Mr',
-      name: process.env.ADMIN_NAME || 'Admin',
-      status: {
-        connect: { id: 1 }
-      }
-    }
-
-    const adminProfile = await prisma.profile.create({
-      data: adminProfileData
-    });
-
-    // Create admin user
-    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 10);
-    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-    await prisma.user.create({
-      data: {
-        email: adminEmail,
-        phone: adminPhone,
-        username: adminUsername,
-        password: hashedPassword,
-        roleId: adminRole.id,
-        profileId: adminProfile.id,
-        isActive: true,
-      }
-    });
-
-    console.log('Created admin user');
-  }
-
-  console.log('Seeding completed.');
+  console.log('✅ Super admin created:', superAdmin)
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
+  .then(() => prisma.$disconnect())
+  .catch((err) => {
+    console.error(err)
+    prisma.$disconnect()
+    process.exit(1)
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
