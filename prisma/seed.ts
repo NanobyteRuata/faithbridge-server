@@ -51,24 +51,41 @@ async function createSuperAdmin(): Promise<User> {
   return superAdmin;
 }
 
-async function createOrganization(): Promise<Organization> {
-  const organization = await prisma.organization.create({ data: { name: 'Test Org', code: 'TSTORG' } });
+async function createOrganization(superAdmin: User): Promise<Organization> {
+  const organization = await prisma.organization.create({
+    data: {
+      name: 'Test Org',
+      code: 'TSTORG',
+      createdById: superAdmin.id,
+      updatedById: superAdmin.id,
+    },
+  });
 
   console.log('✅ Organization created:', organization);
   return organization;
 }
 
-async function createOrgAdminRole(organizationId: number): Promise<Role> {
-  const actionResourceList = Object.values(PERMISSIONS).map(permission => {
-    const [ resource, action ] = permission.split('__');
-    return { resource, action, organizationId }
+async function createOrgAdminRole(organizationId: number, superAdmin: User): Promise<Role> {
+  const actionResourceList = Object.values(PERMISSIONS).map((permission) => {
+    const [resource, action] = permission.split('__');
+    return { resource, action, organizationId, createdById: superAdmin.id, updatedById: superAdmin.id };
   });
 
-  const permissions = await prisma.permission.createManyAndReturn({ data: actionResourceList });
+  const permissions = await prisma.permission.createManyAndReturn({
+    data: actionResourceList,
+  });
   console.log('✅ Permissions created.', permissions);
 
-  const role = prisma.role.create({ data: { organizationId, name: 'Org Admin Role', permissions: { connect: permissions } } });
-  
+  const role = prisma.role.create({
+    data: {
+      organizationId,
+      name: 'Org Admin Role',
+      permissions: { connect: permissions },
+      createdById: superAdmin.id,
+      updatedById: superAdmin.id
+    },
+  });
+
   console.log('✅ Role created.', role);
   return role;
 }
@@ -76,14 +93,16 @@ async function createOrgAdminRole(organizationId: number): Promise<Role> {
 async function createOrgAdmin(
   organizationId: number,
   superAdmin: User,
-  role: Role
+  role: Role,
 ): Promise<User> {
   const email = 'orgadmin@faithbridge.com';
   const phone = '09123123123';
   const username = 'orgadmin';
   const password = 'orgadmin';
 
-  const existing = await prisma.user.findUnique({ where: { email_organizationId: { email, organizationId } } });
+  const existing = await prisma.user.findUnique({
+    where: { email_organizationId: { email, organizationId } },
+  });
 
   if (existing) {
     console.log('✅ Org admin already exists.');
@@ -105,7 +124,7 @@ async function createOrgAdmin(
       username,
       role: { connect: role },
       createdBy: { connect: { id: superAdmin.id } },
-      updatedBy: { connect: { id: superAdmin.id } }
+      updatedBy: { connect: { id: superAdmin.id } },
     },
   });
 
@@ -115,8 +134,8 @@ async function createOrgAdmin(
 
 async function main() {
   const superAdmin = await createSuperAdmin();
-  const organization = await createOrganization();
-  const orgAdminRole = await createOrgAdminRole(organization.id);
+  const organization = await createOrganization(superAdmin);
+  const orgAdminRole = await createOrgAdminRole(organization.id, superAdmin);
   await createOrgAdmin(organization.id, superAdmin, orgAdminRole);
 }
 

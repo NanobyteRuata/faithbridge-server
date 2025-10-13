@@ -31,7 +31,15 @@ model Organization {
   relationships     Relationship[]
   accessCodes       AccessCode[]
 
+
+  createdById Int?
+  createdBy   User? @relation("OrganizationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  
   createdAt DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User? @relation("OrganizationUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
   updatedAt DateTime @updatedAt
 }
 
@@ -70,6 +78,10 @@ model User {
   updatedUsers User[] @relation("UserUpdatedBy")
 
   updatedAt DateTime? @updatedAt
+
+  // Organization relations
+  createdOrganizations Organization[] @relation("OrganizationCreatedBy")
+  updatedOrganizations Organization[] @relation("OrganizationUpdatedBy")
 
   // Role relations
   createdRoles Role[] @relation("RoleCreatedBy")
