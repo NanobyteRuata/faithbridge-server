@@ -9,7 +9,11 @@ import { Prisma } from '@prisma/client';
 export class StatusService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createStatusDto: CreateStatusDto, userId: number, organizationId: number) {
+  create(
+    createStatusDto: CreateStatusDto,
+    userId: number,
+    organizationId: number,
+  ) {
     return this.prisma.status.create({
       data: {
         ...createStatusDto,

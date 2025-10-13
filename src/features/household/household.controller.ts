@@ -34,10 +34,14 @@ export class HouseholdController {
     @Body() createHouseholdDto: CreateHouseholdDto,
   ) {
     if (!user.organizationId) {
-      throw new BadRequestException("Organization ID not found");
+      throw new BadRequestException('Organization ID not found');
     }
 
-    return this.householdService.create(createHouseholdDto, user.sub, user.organizationId);
+    return this.householdService.create(
+      createHouseholdDto,
+      user.sub,
+      user.organizationId,
+    );
   }
 
   @Get()

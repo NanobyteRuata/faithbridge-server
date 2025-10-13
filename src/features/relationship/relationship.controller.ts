@@ -37,13 +37,13 @@ export class RelationshipController {
     @Body() createRelationshipDto: CreateRelationshipDto,
   ) {
     if (!user.organizationId) {
-      throw new BadRequestException("Organization ID not found");
+      throw new BadRequestException('Organization ID not found');
     }
 
     return this.relationshipService.createRelationship(
       createRelationshipDto,
       user.sub,
-      user.organizationId
+      user.organizationId,
     );
   }
 
@@ -92,13 +92,13 @@ export class RelationshipController {
     @Body() createRelationshipDto: CreateRelationshipTypeDto,
   ) {
     if (!user.organizationId) {
-      throw new BadRequestException("Organization ID not found");
+      throw new BadRequestException('Organization ID not found');
     }
-    
+
     return this.relationshipService.createRelationshipType(
       createRelationshipDto,
       user.sub,
-      user.organizationId
+      user.organizationId,
     );
   }
 

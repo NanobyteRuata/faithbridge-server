@@ -12,10 +12,19 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super({ passReqToCallback: true });
   }
 
-  async validate(req: Request, username: string, password: string): Promise<User> {
+  async validate(
+    req: Request,
+    username: string,
+    password: string,
+  ): Promise<User> {
+    // eslint-disable-next-line
     const organizationCode: string | undefined = req.body?.organizationCode;
 
-    const user = await this.userService.validateUser(username, password, organizationCode);
+    const user = await this.userService.validateUser(
+      username,
+      password,
+      organizationCode,
+    );
     if (!user) {
       throw new UnauthorizedException();
     }

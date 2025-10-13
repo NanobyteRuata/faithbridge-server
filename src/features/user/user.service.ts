@@ -6,7 +6,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
-import { Organization, Permission, Prisma, Profile, Role, User } from '@prisma/client';
+import {
+  Organization,
+  Permission,
+  Prisma,
+  Profile,
+  Role,
+  User,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UserJwtPayload } from '../../core/auth/interfaces/jwt-payload.interface';
 import { Tokens } from './interface/tokens.interface';
@@ -20,20 +27,20 @@ import { ProfileService } from '../profile/profile.service';
 import { RegisterResponseDto } from './dto/response/register-response.dto';
 
 interface FindUniqieOrgUserParams {
-  userFilters: FindUniqieOrgUserUserFilterParams,
-  organizationFilters?: FindUniqueOrgUserOrganizationFilterParams
+  userFilters: FindUniqieOrgUserUserFilterParams;
+  organizationFilters?: FindUniqueOrgUserOrganizationFilterParams;
 }
 
 interface FindUniqieOrgUserUserFilterParams {
-  id?: number,
-  username?: string,
-  email?: string,
-  phone?: string
+  id?: number;
+  username?: string;
+  email?: string;
+  phone?: string;
 }
 
 interface FindUniqueOrgUserOrganizationFilterParams {
-  organizationId?: number,
-  organizationCode?: string
+  organizationId?: number;
+  organizationCode?: string;
 }
 
 @Injectable()
@@ -44,26 +51,35 @@ export class UserService {
     private configService: ConfigService,
     private emailService: EmailService,
     private profileService: ProfileService,
-  ) { }
+  ) {}
 
-  async findUniqueOrgUser({ userFilters, organizationFilters }: FindUniqieOrgUserParams, include?: Prisma.UserInclude): Promise<User | null> {
+  async findUniqueOrgUser(
+    { userFilters, organizationFilters }: FindUniqieOrgUserParams,
+    include?: Prisma.UserInclude,
+  ): Promise<User | null> {
     const { id, username, email, phone } = userFilters;
 
     if (id) {
-      return await this.prisma.user.findUnique({ where: { id } })
+      return await this.prisma.user.findUnique({ where: { id } });
     }
 
     if (!username && !email && !phone) return null;
 
-    let { organizationId, organizationCode } = organizationFilters ?? {};
+    let organizationId = organizationFilters?.organizationId;
+    const organizationCode = organizationFilters?.organizationCode;
+
     if (!organizationId && organizationCode) {
-      const organization = await this.prisma.organization.findUnique({ where: { code: organizationCode } });
+      const organization = await this.prisma.organization.findUnique({
+        where: { code: organizationCode },
+      });
       organizationId = organization?.id;
     }
-    
+
     if (organizationId) {
       const where: Prisma.UserWhereUniqueInput = {
-        username_organizationId: username ? { username, organizationId } : undefined,
+        username_organizationId: username
+          ? { username, organizationId }
+          : undefined,
         email_organizationId: email ? { email, organizationId } : undefined,
         phone_organizationId: phone ? { phone, organizationId } : undefined,
       };
@@ -74,13 +90,17 @@ export class UserService {
         email,
         phone,
         organizationId: null,
-        isSuperAdmin: true
-      }
+        isSuperAdmin: true,
+      };
       return await this.prisma.user.findFirst({ where, include });
     }
   }
 
-  async updateOrgUser(filters: FindUniqieOrgUserParams, data: Partial<User>, include?: Prisma.UserInclude) {
+  async updateOrgUser(
+    filters: FindUniqieOrgUserParams,
+    data: Partial<User>,
+    include?: Prisma.UserInclude,
+  ) {
     const user = await this.findUniqueOrgUser(filters, include);
     if (!user) return null;
 
@@ -90,9 +110,18 @@ export class UserService {
     });
   }
 
-  async validateUser(username: string, password: string, organizationCode?: string): Promise<User> {
-    const userInclude: Prisma.UserInclude = { role: { include: { permissions: true } } };
-    let user: User | null = await this.findUniqueOrgUser({ userFilters: { username }, organizationFilters: { organizationCode } }, userInclude);
+  async validateUser(
+    username: string,
+    password: string,
+    organizationCode?: string,
+  ): Promise<User> {
+    const userInclude: Prisma.UserInclude = {
+      role: { include: { permissions: true } },
+    };
+    const user: User | null = await this.findUniqueOrgUser(
+      { userFilters: { username }, organizationFilters: { organizationCode } },
+      userInclude,
+    );
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -136,14 +165,17 @@ export class UserService {
   async register(
     registerDto: RegisterDto,
     userId: number,
-    userOrganizationId?: number
+    userOrganizationId?: number,
   ): Promise<RegisterResponseDto> {
     const { username, email, password, organizationId } = registerDto;
 
     // Check if user already exists
     const userFilters = { username, email };
     const organizationFilters = { organizationId };
-    const existingUser = await this.findUniqueOrgUser({ userFilters, organizationFilters })
+    const existingUser = await this.findUniqueOrgUser({
+      userFilters,
+      organizationFilters,
+    });
 
     if (existingUser) {
       throw new ForbiddenException('Username already exists');
@@ -235,8 +267,14 @@ export class UserService {
     return true;
   }
 
-  async sendPasswordResetCode(email: string, organizationCode?: string): Promise<boolean> {
-    const user = await this.findUniqueOrgUser({ userFilters: { email }, organizationFilters: { organizationCode } });
+  async sendPasswordResetCode(
+    email: string,
+    organizationCode?: string,
+  ): Promise<boolean> {
+    const user = await this.findUniqueOrgUser({
+      userFilters: { email },
+      organizationFilters: { organizationCode },
+    });
     if (!user) throw new NotFoundException('User not found');
 
     const code = randomInt(100000, 999999).toString();
@@ -246,7 +284,10 @@ export class UserService {
       resetCode: code,
       resetCodeExpiresAt: expires,
     };
-    await this.updateOrgUser({ userFilters: { email }, organizationFilters: { organizationCode } }, data);
+    await this.updateOrgUser(
+      { userFilters: { email }, organizationFilters: { organizationCode } },
+      data,
+    );
 
     await this.emailService.sendEmail(
       email,
@@ -262,9 +303,12 @@ export class UserService {
     email: string,
     code: string,
     newPassword: string,
-    organizationId?: number
+    organizationId?: number,
   ): Promise<boolean> {
-    const user = await this.findUniqueOrgUser({ userFilters: { email }, organizationFilters: { organizationId } });
+    const user = await this.findUniqueOrgUser({
+      userFilters: { email },
+      organizationFilters: { organizationId },
+    });
     if (
       !user ||
       user.resetCode !== code ||
@@ -279,39 +323,56 @@ export class UserService {
 
     const filter = {
       userFilters: { email },
-      organizationFilters: { organizationId }
-    }
+      organizationFilters: { organizationId },
+    };
     const data = {
       password: hashed,
       resetCode: null,
       resetCodeExpiresAt: null,
-    }
+    };
     await this.updateOrgUser(filter, data);
 
     return true;
   }
 
-  private async generateTokens(user: User & { profile?: Profile | null, role?: Role & { permissions?: Permission[] } | null, organization?: Organization | null }, deviceId: string): Promise<Tokens> {
-    let { profile, role, organization, username, organizationId, isSuperAdmin } = user;
+  private async generateTokens(
+    user: User & {
+      profile?: Profile | null;
+      role?: (Role & { permissions?: Permission[] }) | null;
+      organization?: Organization | null;
+    },
+    deviceId: string,
+  ): Promise<Tokens> {
+    let { profile, role, organization } = user;
+    const { username, organizationId, isSuperAdmin } = user;
 
     if (!profile)
-      profile = await this.prisma.profile.findUnique({ where: { id: user.profileId } });
+      profile = await this.prisma.profile.findUnique({
+        where: { id: user.profileId },
+      });
     let name = 'Unknown User';
     if (profile) {
-      name = profile?.nickName ?? (profile.name + ' ' + profile.lastName);
+      name = profile?.nickName ?? profile.name + ' ' + profile.lastName;
     }
 
     if (user.roleId && (!role || (role && !role.permissions))) {
-      role = await this.prisma.role.findUnique({ where: { id: user.roleId }, include: { permissions: true } });
+      role = await this.prisma.role.findUnique({
+        where: { id: user.roleId },
+        include: { permissions: true },
+      });
     }
 
     let permissions: string[] | null = null;
     if (role?.permissions) {
-      permissions = role.permissions.map(permission => permission.resource + '__' + permission.action);
+      permissions = role.permissions.map(
+        (permission) => permission.resource + '__' + permission.action,
+      );
     }
 
     if (!organization)
-      organization = await this.prisma.organization.findUnique({ where: { id: user.profileId } });
+      organization = await this.prisma.organization.findUnique({
+        where: { id: user.profileId },
+      });
 
     const jwtPayload: UserJwtPayload = {
       sub: user.id,

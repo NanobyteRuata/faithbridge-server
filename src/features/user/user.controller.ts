@@ -37,7 +37,11 @@ export class UserController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.USER__CREATE)
   register(@Req() { user }: JwtAuthRequest, @Body() registerDto: RegisterDto) {
-    return this.userService.register(registerDto, user.sub, user.organizationId);
+    return this.userService.register(
+      registerDto,
+      user.sub,
+      user.organizationId,
+    );
   }
 
   @UseGuards(LocalAuthGuard)
@@ -83,16 +87,21 @@ export class UserController {
 
   @Post('forgot-password')
   async forgotPassword(@Body() { email, organizationCode }: ForgotPasswordDto) {
-    return await this.userService.sendPasswordResetCode(email, organizationCode);
+    return await this.userService.sendPasswordResetCode(
+      email,
+      organizationCode,
+    );
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() { email, code, newPassword, organizationId }: ResetPasswordDto) {
+  async resetPassword(
+    @Body() { email, code, newPassword, organizationId }: ResetPasswordDto,
+  ) {
     return await this.userService.resetPasswordWithCode(
       email,
       code,
       newPassword,
-      organizationId
+      organizationId,
     );
   }
 }

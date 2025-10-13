@@ -33,10 +33,14 @@ export class MembershipController {
     @Body() createMembershipDto: CreateMembershipDto,
   ) {
     if (!user.organizationId) {
-      throw new BadRequestException("Organization ID not found");
+      throw new BadRequestException('Organization ID not found');
     }
 
-    return this.membershipService.create(createMembershipDto, user.sub, user.organizationId);
+    return this.membershipService.create(
+      createMembershipDto,
+      user.sub,
+      user.organizationId,
+    );
   }
 
   @Get()

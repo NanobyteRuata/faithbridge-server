@@ -39,7 +39,9 @@ export class AccessCodeController {
     @Req() { user }: JwtAuthRequest,
   ) {
     if (createAccessCodeDto.organizationId !== user.organizationId) {
-      return new BadRequestException('Please provide the correct organizationId')
+      return new BadRequestException(
+        'Please provide the correct organizationId',
+      );
     }
 
     return this.accessCodeService.create(createAccessCodeDto, user.sub);
@@ -48,12 +50,11 @@ export class AccessCodeController {
   @Get()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ACCESS_CODE__READ)
-  findAll(
-    @Query() query: GetAccessCodesDto,
-    @Req() { user }: JwtAuthRequest
-  ) {
+  findAll(@Query() query: GetAccessCodesDto, @Req() { user }: JwtAuthRequest) {
     if (!user.isSuperAdmin && user.organizationId !== query.organizationId) {
-      return new BadRequestException('Please provide the correct organizationId')
+      return new BadRequestException(
+        'Please provide the correct organizationId',
+      );
     }
 
     return this.accessCodeService.findAll(query);
@@ -62,8 +63,7 @@ export class AccessCodeController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ACCESS_CODE__READ)
-  findOne(@Param('id') id: string,
-    @Req() { user }: JwtAuthRequest) {
+  findOne(@Param('id') id: string, @Req() { user }: JwtAuthRequest) {
     return this.accessCodeService.findOne(+id, user.organizationId);
   }
 
@@ -79,7 +79,7 @@ export class AccessCodeController {
       +id,
       updateAccessCodeDto,
       user.sub,
-      user.organizationId
+      user.organizationId,
     );
   }
 

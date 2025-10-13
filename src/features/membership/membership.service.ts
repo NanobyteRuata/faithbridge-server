@@ -9,7 +9,11 @@ import { Prisma } from '@prisma/client';
 export class MembershipService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createMembershipDto: CreateMembershipDto, userId: number, organizationId: number) {
+  create(
+    createMembershipDto: CreateMembershipDto,
+    userId: number,
+    organizationId: number,
+  ) {
     return this.prisma.membership.create({
       data: {
         ...createMembershipDto,

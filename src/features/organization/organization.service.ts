@@ -10,10 +10,12 @@ export class OrganizationService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(createOrganizationDto: CreateOrganizationDto, createdById: number) {
-    return this.prisma.organization.create({ data: {
-      ...createOrganizationDto,
-      createdById
-    } });
+    return this.prisma.organization.create({
+      data: {
+        ...createOrganizationDto,
+        createdById,
+      },
+    });
   }
 
   async findAll({ skip, limit, search }: GetOrganizationsDto) {
@@ -48,8 +50,15 @@ export class OrganizationService {
     return this.prisma.organization.findUnique({ where: { id } });
   }
 
-  update(id: number, updateOrganizationDto: UpdateOrganizationDto, updatedById: number) {
-    return this.prisma.organization.update({ where: { id }, data: { ...updateOrganizationDto, updatedById } });
+  update(
+    id: number,
+    updateOrganizationDto: UpdateOrganizationDto,
+    updatedById: number,
+  ) {
+    return this.prisma.organization.update({
+      where: { id },
+      data: { ...updateOrganizationDto, updatedById },
+    });
   }
 
   remove(id: number, userId: number) {

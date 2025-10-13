@@ -28,12 +28,19 @@ export class StatusController {
 
   @Post()
   @Permissions(PERMISSIONS.STATUS__CREATE)
-  create(@Body() createStatusDto: CreateStatusDto, @Req() { user }: JwtAuthRequest) {
+  create(
+    @Body() createStatusDto: CreateStatusDto,
+    @Req() { user }: JwtAuthRequest,
+  ) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID not found');
     }
 
-    return this.statusService.create(createStatusDto, user.sub, user.organizationId);
+    return this.statusService.create(
+      createStatusDto,
+      user.sub,
+      user.organizationId,
+    );
   }
 
   @Get()

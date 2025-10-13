@@ -28,7 +28,10 @@ export class AddressController {
 
   @Post()
   @Permissions(PERMISSIONS.ADDRESS__CREATE)
-  create(@Req() { user }: JwtAuthRequest, @Body() createAddressDto: CreateAddressDto) {
+  create(
+    @Req() { user }: JwtAuthRequest,
+    @Body() createAddressDto: CreateAddressDto,
+  ) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID not found');
     }
@@ -50,17 +53,25 @@ export class AddressController {
 
   @Patch(':id')
   @Permissions(PERMISSIONS.ADDRESS__UPDATE)
-  update(@Req() { user }: JwtAuthRequest, @Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
+  update(
+    @Req() { user }: JwtAuthRequest,
+    @Param('id') id: string,
+    @Body() updateAddressDto: UpdateAddressDto,
+  ) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID not found');
     }
 
-    return this.addressService.update(+id, updateAddressDto, user.organizationId);
+    return this.addressService.update(
+      +id,
+      updateAddressDto,
+      user.organizationId,
+    );
   }
 
   @Delete(':id')
   @Permissions(PERMISSIONS.ADDRESS__DELETE)
   remove(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
-    return this.addressService.remove(+id);
+    return this.addressService.remove(+id, user.sub);
   }
 }

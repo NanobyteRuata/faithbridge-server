@@ -16,7 +16,7 @@ export class RelationshipService {
   createRelationship(
     createRelationshipDto: CreateRelationshipDto,
     userId: number,
-    organizationId: number
+    organizationId: number,
   ) {
     return this.prisma.relationship.create({
       data: {
@@ -89,7 +89,7 @@ export class RelationshipService {
   createRelationshipType(
     createRelationshipTypeDto: CreateRelationshipTypeDto,
     userId: number,
-    organizationId: number
+    organizationId: number,
   ) {
     return this.prisma.relationshipType.create({
       data: {

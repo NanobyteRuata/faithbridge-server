@@ -9,19 +9,15 @@ export class AddressService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(createAddressDto: CreateAddressDto, organizationId: number) {
-    return this.prisma.address.create({ data: { ... createAddressDto, organizationId } });
+    return this.prisma.address.create({
+      data: { ...createAddressDto, organizationId },
+    });
   }
 
-  findAll({
-    skip,
-    limit,
-    search,
-    township,
-    city,
-    state,
-    country,
-  }: GetAddressesDto,
-organizationId?: number) {
+  findAll(
+    { skip, limit, search, township, city, state, country }: GetAddressesDto,
+    organizationId?: number,
+  ) {
     return this.prisma.address.findMany({
       skip,
       take: limit,
@@ -67,14 +63,19 @@ organizationId?: number) {
     return this.prisma.address.findUnique({ where: { id, organizationId } });
   }
 
-  update(id: number, updateAddressDto: UpdateAddressDto, organizationId: number) {
+  update(
+    id: number,
+    updateAddressDto: UpdateAddressDto,
+    organizationId: number,
+  ) {
     return this.prisma.address.update({
       where: { id, organizationId },
       data: updateAddressDto,
     });
   }
 
-  remove(id: number) {
+  remove(id: number, userId: number) {
+    console.log('Address deleted by:', userId);
     return this.prisma.address.delete({ where: { id } });
   }
 }

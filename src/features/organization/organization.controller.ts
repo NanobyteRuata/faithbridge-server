@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -15,7 +26,10 @@ export class OrganizationController {
 
   @Post()
   @Permissions('SUPER-ADMIN')
-  create(@Req() { user }: JwtAuthRequest, @Body() createOrganizationDto: CreateOrganizationDto) {
+  create(
+    @Req() { user }: JwtAuthRequest,
+    @Body() createOrganizationDto: CreateOrganizationDto,
+  ) {
     return this.organizationService.create(createOrganizationDto, user.sub);
   }
 
@@ -33,8 +47,16 @@ export class OrganizationController {
 
   @Patch(':id')
   @Permissions('ORGANIZATION__UPDATE_SELF')
-  update(@Req() { user }: JwtAuthRequest, @Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto) {
-    return this.organizationService.update(+id, updateOrganizationDto, user.sub);
+  update(
+    @Req() { user }: JwtAuthRequest,
+    @Param('id') id: string,
+    @Body() updateOrganizationDto: UpdateOrganizationDto,
+  ) {
+    return this.organizationService.update(
+      +id,
+      updateOrganizationDto,
+      user.sub,
+    );
   }
 
   @Delete(':id')

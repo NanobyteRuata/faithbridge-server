@@ -11,7 +11,10 @@ import { AccessCodeJwtPayload } from 'src/core/auth/interfaces/jwt-payload.inter
 export class AccessCodeService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async validate(accessCode: string, organizationId: number): Promise<AccessCodeJwtPayload | null> {
+  async validate(
+    accessCode: string,
+    organizationId: number,
+  ): Promise<AccessCodeJwtPayload | null> {
     const accessCodeEntities = await this.prisma.accessCode.findMany({
       where: { organizationId },
       include: { role: { include: { permissions: true } }, organization: true },
@@ -42,7 +45,9 @@ export class AccessCodeService {
   }
 
   async login(accessCode: string, organizationCode: string) {
-    const organization = await this.prisma.organization.findUnique({ where: { code: organizationCode } });
+    const organization = await this.prisma.organization.findUnique({
+      where: { code: organizationCode },
+    });
     if (!organization) {
       throw new NotFoundException();
     }
@@ -75,7 +80,7 @@ export class AccessCodeService {
           contains: search?.trim(),
           mode: 'insensitive',
         },
-        organizationId
+        organizationId,
       },
     };
 
@@ -103,7 +108,7 @@ export class AccessCodeService {
     id: number,
     updateAccessCodeDto: UpdateAccessCodeDto,
     userId: number,
-    organizationId?: number
+    organizationId?: number,
   ) {
     const { code, ...restDto } = updateAccessCodeDto;
 
