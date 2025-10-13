@@ -25,7 +25,6 @@ export class HouseholdService {
         updatedById: userId,
       },
       include: {
-        address: true,
         headProfile: true,
         profiles: true,
       },
@@ -64,7 +63,6 @@ export class HouseholdService {
     return this.prisma.household.findUnique({
       where: { id },
       include: {
-        address: true,
         headProfile: true,
         profiles: true,
       },
@@ -86,7 +84,6 @@ export class HouseholdService {
         updatedById: userId,
       },
       include: {
-        address: true,
         headProfile: true,
         profiles: true,
       },
