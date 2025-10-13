@@ -1,6 +1,7 @@
-import { Organization, PrismaClient, User } from '@prisma/client';
+import { Organization, PrismaClient, Role, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
+import { PERMISSIONS } from '../src/shared/constants/permissions.constant';
 
 dotenv.config();
 const prisma = new PrismaClient();
@@ -57,14 +58,37 @@ async function createOrganization(): Promise<Organization> {
   return organization;
 }
 
+async function createOrgAdminRole(organizationId: number): Promise<Role> {
+  const actionResourceList = Object.values(PERMISSIONS).map(permission => {
+    const [ resource, action ] = permission.split('__');
+    return { resource, action, organizationId }
+  });
+
+  const permissions = await prisma.permission.createManyAndReturn({ data: actionResourceList });
+  console.log('✅ Permissions created.', permissions);
+
+  const role = prisma.role.create({ data: { organizationId, name: 'Org Admin Role', permissions: { connect: permissions } } });
+  
+  console.log('✅ Role created.', role);
+  return role;
+}
+
 async function createOrgAdmin(
-  orgaizationId: number,
+  organizationId: number,
   superAdmin: User,
+  role: Role
 ): Promise<User> {
   const email = 'orgadmin@faithbridge.com';
   const phone = '09123123123';
   const username = 'orgadmin';
   const password = 'orgadmin';
+
+  const existing = await prisma.user.findUnique({ where: { email_organizationId: { email, organizationId } } });
+
+  if (existing) {
+    console.log('✅ Org admin already exists.');
+    return existing;
+  }
 
   const profile = await prisma.profile.create({
     data: { title: 'Mr.', name: 'Org Admin' },
@@ -73,24 +97,27 @@ async function createOrgAdmin(
 
   const orgAdmin = await prisma.user.create({
     data: {
-      organization: { connect: { id: orgaizationId } },
+      organization: { connect: { id: organizationId } },
       profile: { connect: { id: profile.id } },
       email,
       phone,
       password: hashedPassword,
       username,
+      role: { connect: role },
       createdBy: { connect: { id: superAdmin.id } },
       updatedBy: { connect: { id: superAdmin.id } }
     },
   });
 
+  console.log('✅ Org admin created:', superAdmin);
   return orgAdmin;
 }
 
 async function main() {
   const superAdmin = await createSuperAdmin();
   const organization = await createOrganization();
-  await createOrgAdmin(organization.id, superAdmin);
+  const orgAdminRole = await createOrgAdminRole(organization.id);
+  await createOrgAdmin(organization.id, superAdmin, orgAdminRole);
 }
 
 main()
