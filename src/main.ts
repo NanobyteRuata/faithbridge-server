@@ -15,9 +15,9 @@ async function bootstrap() {
     }),
   );
 
-  // app.useGlobalFilters(new ExceptionsFilter());
+  app.useGlobalFilters(new ExceptionsFilter());
 
-  // app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   app.enableCors({ origin: process.env.CORS_ALLOW_ORIGIN ?? '*' });
 
