@@ -13,6 +13,7 @@ import { RelationshipModule } from './features/relationship/relationship.module'
 import { AddressModule } from './features/address/address.module';
 import { HouseholdModule } from './features/household/household.module';
 import { OrganizationModule } from './features/organization/organization.module';
+import { PermissionModule } from './features/permission/permission.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { OrganizationModule } from './features/organization/organization.module'
     AddressModule,
     HouseholdModule,
     OrganizationModule,
+    PermissionModule,
   ],
 })
 export class AppModule {}

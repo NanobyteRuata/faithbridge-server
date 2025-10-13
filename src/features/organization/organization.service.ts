@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { CreateOrganizationDto } from './dto/request/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/request/update-organization.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { GetOrganizationsDto } from './dto/query/get-organizations.dto';
 import { Prisma } from '@prisma/client';
@@ -30,13 +30,13 @@ export class OrganizationService {
       },
     };
 
-    const [memberships, total] = await this.prisma.$transaction([
+    const [organizations, total] = await this.prisma.$transaction([
       this.prisma.organization.findMany(args),
       this.prisma.organization.count({ where: args.where }),
     ]);
 
     return {
-      data: memberships,
+      data: organizations,
       meta: {
         page: skip,
         limit,
