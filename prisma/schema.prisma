@@ -31,10 +31,9 @@ model Organization {
   relationships     Relationship[]
   accessCodes       AccessCode[]
 
-
   createdById Int?
   createdBy   User? @relation("OrganizationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  
+
   createdAt DateTime @default(now())
 
   updatedById Int?
@@ -297,8 +296,7 @@ model Address {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  household Household?
-  profiles  Profile[]
+  profiles Profile[]
 
   room     String?
   building String?
@@ -322,9 +320,6 @@ model Household {
   headProfileId Int?      @unique
   headProfile   Profile?  @relation("HouseholdHeadProfile", fields: [headProfileId], references: [id], onDelete: Restrict)
   profiles      Profile[] @relation("HouseholdProfile")
-
-  addressId Int?     @unique
-  address   Address? @relation(fields: [addressId], references: [id], onDelete: SetNull)
 
   createdById Int?
   createdBy   User? @relation("HouseholdCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
