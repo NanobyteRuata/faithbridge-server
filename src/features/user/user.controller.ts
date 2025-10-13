@@ -36,8 +36,8 @@ export class UserController {
   @Post('register')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.USER__CREATE)
-  register(@Req() req: JwtAuthRequest, @Body() registerDto: RegisterDto) {
-    return this.userService.register(registerDto, req.user.sub);
+  register(@Req() { user }: JwtAuthRequest, @Body() registerDto: RegisterDto) {
+    return this.userService.register(registerDto, user.sub, user.organizationId);
   }
 
   @UseGuards(LocalAuthGuard)

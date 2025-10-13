@@ -136,6 +136,7 @@ export class UserService {
   async register(
     registerDto: RegisterDto,
     userId: number,
+    userOrganizationId?: number
   ): Promise<RegisterResponseDto> {
     const { username, email, password, organizationId } = registerDto;
 
@@ -165,7 +166,7 @@ export class UserService {
         phone: registerDto.phone,
         password: hashedPassword,
         isActive: true,
-        organizationId,
+        organizationId: organizationId ?? userOrganizationId,
         roleId: registerDto.roleId,
         profileId: profile.id,
         createdById: userId,
