@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { AccessCodeService } from './access-code.service';
 import { CreateAccessCodeDto } from './dto/request/create-access-code.dto';
@@ -29,40 +30,53 @@ export class AccessCodeController {
   @Permissions(PERMISSIONS.ACCESS_CODE__CREATE)
   create(
     @Body() createAccessCodeDto: CreateAccessCodeDto,
-    @Req() req: JwtAuthRequest,
+    @Req() { user }: JwtAuthRequest,
   ) {
-    return this.accessCodeService.create(createAccessCodeDto, req.user.sub);
+    if (createAccessCodeDto.organizationId !== user.organizationId) {
+      return new BadRequestException('Please provide the correct organizationId')
+    }
+
+    return this.accessCodeService.create(createAccessCodeDto, user.sub);
   }
 
   @Get()
   @Permissions(PERMISSIONS.ACCESS_CODE__READ)
-  findAll(@Query() query: GetAccessCodesDto) {
+  findAll(
+    @Query() query: GetAccessCodesDto,
+    @Req() { user }: JwtAuthRequest
+  ) {
+    if (!user.isSuperAdmin && user.organizationId !== query.organizationId) {
+      return new BadRequestException('Please provide the correct organizationId')
+    }
+
     return this.accessCodeService.findAll(query);
   }
 
   @Get(':id')
   @Permissions(PERMISSIONS.ACCESS_CODE__READ)
-  findOne(@Param('id') id: string) {
-    return this.accessCodeService.findOne(+id);
+  findOne(@Param('id') id: string,
+    @Req() { user }: JwtAuthRequest) {
+    return this.accessCodeService.findOne(+id, user.organizationId);
   }
 
   @Patch(':id')
   @Permissions(PERMISSIONS.ACCESS_CODE__UPDATE)
   update(
-    @Req() req: JwtAuthRequest,
+    @Req() { user }: JwtAuthRequest,
     @Param('id') id: string,
     @Body() updateAccessCodeDto: UpdateAccessCodeDto,
   ) {
     return this.accessCodeService.update(
       +id,
       updateAccessCodeDto,
-      req.user.sub,
+      user.sub,
+      user.organizationId
     );
   }
 
   @Delete(':id')
   @Permissions(PERMISSIONS.ACCESS_CODE__DELETE)
-  remove(@Req() req: JwtAuthRequest, @Param('id') id: string) {
-    return this.accessCodeService.remove(+id, req.user.sub);
+  remove(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
+    return this.accessCodeService.remove(+id, user.sub, user.organizationId);
   }
 }

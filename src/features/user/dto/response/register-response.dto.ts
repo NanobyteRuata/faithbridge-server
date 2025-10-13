@@ -7,13 +7,13 @@ export class RegisterResponseDto {
   role: Partial<Role>;
   profile: Partial<Profile>;
 
-  constructor(user: User & { role: Role; profile: Profile }) {
+  constructor(user: User & { role: Role | null; profile: Profile }) {
     this.username = user.username;
     this.email = user.email;
     this.phone = user.phone;
     this.role = {
-      id: user.roleId,
-      name: user.role.name,
+      id: user.role?.id,
+      name: user.role?.name,
     };
     this.profile = {
       id: user.profileId,

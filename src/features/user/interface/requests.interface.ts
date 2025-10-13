@@ -1,4 +1,5 @@
 import { User } from '@prisma/client';
+import { UserJwtPayload } from 'src/core/auth/interfaces/jwt-payload.interface';
 
 // For local strategy requests
 export interface LocalAuthRequest {
@@ -7,17 +8,12 @@ export interface LocalAuthRequest {
 
 // For JWT strategy requests
 export interface JwtAuthRequest {
-  user: {
-    sub: number;
-    username: string;
-  };
+  user: UserJwtPayload;
 }
 
 // For JWT refresh strategy requests
 export interface JwtRefreshRequest {
-  user: {
-    sub: number;
-    username: string;
+  user: UserJwtPayload & {
     refreshToken: string;
   };
 }

@@ -9,10 +9,11 @@ import { Prisma } from '@prisma/client';
 export class HouseholdService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createHouseholdDto: CreateHouseholdDto, userId: number) {
+  create(createHouseholdDto: CreateHouseholdDto, userId: number, organizationId: number) {
     return this.prisma.household.create({
       data: {
         ...createHouseholdDto,
+        organizationId,
         profiles: {
           connect: createHouseholdDto.profileIds?.map((id) => ({ id })),
         },

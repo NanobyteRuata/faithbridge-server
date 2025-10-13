@@ -8,8 +8,8 @@ import { GetAddressesDto } from './dto/query/get-addresses.dto';
 export class AddressService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createAddressDto: CreateAddressDto) {
-    return this.prisma.address.create({ data: createAddressDto });
+  create(createAddressDto: CreateAddressDto, organizationId: number) {
+    return this.prisma.address.create({ data: { ... createAddressDto, organizationId } });
   }
 
   findAll({
@@ -20,11 +20,13 @@ export class AddressService {
     city,
     state,
     country,
-  }: GetAddressesDto) {
+  }: GetAddressesDto,
+organizationId?: number) {
     return this.prisma.address.findMany({
       skip,
       take: limit,
       where: {
+        organizationId,
         room: {
           contains: search?.trim(),
           mode: 'insensitive',
@@ -61,13 +63,13 @@ export class AddressService {
     });
   }
 
-  findOne(id: number) {
-    return this.prisma.address.findUnique({ where: { id } });
+  findOne(id: number, organizationId?: number) {
+    return this.prisma.address.findUnique({ where: { id, organizationId } });
   }
 
-  update(id: number, updateAddressDto: UpdateAddressDto) {
+  update(id: number, updateAddressDto: UpdateAddressDto, organizationId: number) {
     return this.prisma.address.update({
-      where: { id },
+      where: { id, organizationId },
       data: updateAddressDto,
     });
   }

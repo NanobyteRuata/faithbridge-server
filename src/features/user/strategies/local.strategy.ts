@@ -3,16 +3,19 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from '../user.service';
 import { User } from '@prisma/client';
+import { Request } from 'express';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(private userService: UserService) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    super();
+    super({ passReqToCallback: true });
   }
 
-  async validate(username: string, password: string): Promise<User> {
-    const user = await this.userService.validateUser(username, password);
+  async validate(req: Request, username: string, password: string): Promise<User> {
+    const organizationCode: string | undefined = req.body?.organizationCode;
+
+    const user = await this.userService.validateUser(username, password, organizationCode);
     if (!user) {
       throw new UnauthorizedException();
     }

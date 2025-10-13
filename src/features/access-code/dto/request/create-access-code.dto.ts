@@ -8,6 +8,10 @@ import {
 } from 'class-validator';
 
 export class CreateAccessCodeDto {
+  @IsNumber()
+  @IsNotEmpty()
+  organizationId: number;
+
   @IsString()
   @IsNotEmpty()
   code: string;

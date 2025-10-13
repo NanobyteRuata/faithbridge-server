@@ -12,5 +12,9 @@ export class LoginRequestDto {
 
   @IsString()
   @IsOptional()
+  organizationCode?: string;
+
+  @IsString()
+  @IsOptional()
   deviceId?: string;
 }

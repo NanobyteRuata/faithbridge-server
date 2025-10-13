@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { StatusService } from './status.service';
 import { CreateStatusDto } from './dto/request/create-status.dto';
@@ -27,8 +28,12 @@ export class StatusController {
 
   @Post()
   @Permissions(PERMISSIONS.STATUS__CREATE)
-  create(@Body() createStatusDto: CreateStatusDto, @Req() req: JwtAuthRequest) {
-    return this.statusService.create(createStatusDto, req.user.sub);
+  create(@Body() createStatusDto: CreateStatusDto, @Req() { user }: JwtAuthRequest) {
+    if (!user.organizationId) {
+      throw new BadRequestException('Organization ID not found');
+    }
+
+    return this.statusService.create(createStatusDto, user.sub, user.organizationId);
   }
 
   @Get()

@@ -26,7 +26,7 @@ export class AccessCodeService {
     });
   }
 
-  async findAll({ skip, limit, search }: GetAccessCodesDto) {
+  async findAll({ skip, limit, search, organizationId }: GetAccessCodesDto) {
     const args: Prisma.AccessCodeFindManyArgs = {
       skip,
       take: limit,
@@ -35,6 +35,7 @@ export class AccessCodeService {
           contains: search?.trim(),
           mode: 'insensitive',
         },
+        organizationId
       },
     };
 
@@ -54,14 +55,15 @@ export class AccessCodeService {
     };
   }
 
-  findOne(id: number) {
-    return this.prisma.accessCode.findUnique({ where: { id } });
+  findOne(id: number, organizationId?: number) {
+    return this.prisma.accessCode.findUnique({ where: { id, organizationId } });
   }
 
   async update(
     id: number,
     updateAccessCodeDto: UpdateAccessCodeDto,
     userId: number,
+    organizationId?: number
   ) {
     const { code, ...restDto } = updateAccessCodeDto;
 
@@ -77,7 +79,7 @@ export class AccessCodeService {
     }
 
     const accessCodeEntity = await this.prisma.accessCode.update({
-      where: { id },
+      where: { id, organizationId },
       data: updatedData,
     });
 
@@ -87,9 +89,9 @@ export class AccessCodeService {
     return restEntity;
   }
 
-  async remove(id: number, userId: number) {
+  async remove(id: number, userId: number, organizationId?: number) {
     // TODO: use userId for activity logging later
     console.log(userId);
-    return this.prisma.accessCode.delete({ where: { id } });
+    return this.prisma.accessCode.delete({ where: { id, organizationId } });
   }
 }

@@ -22,6 +22,10 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
+  @IsNumber()
+  @IsOptional()
+  organizationId?: number;
+
   @IsString()
   @MinLength(6)
   @MaxLength(100)

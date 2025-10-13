@@ -8,8 +8,8 @@ import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
-  AccessCodeUserPayload,
-  JwtUserPayload,
+  AccessCodeJwtPayload,
+  UserJwtPayload,
 } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
@@ -29,7 +29,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // eslint-disable-next-line
-    const request = context.switchToHttp().getRequest() as { user: JwtUserPayload | AccessCodeUserPayload };
+    const request = context.switchToHttp().getRequest() as { user: UserJwtPayload | AccessCodeJwtPayload };
     const userOrAccess = request.user;
 
     if (!userOrAccess) {
@@ -40,9 +40,8 @@ export class PermissionsGuard implements CanActivate {
     if (userOrAccess.type === 'accessCode') {
       permissions = userOrAccess.permissions;
     }
-    console.log(permissions);
 
-    if (userOrAccess.type === 'jwt') {
+    if (userOrAccess.type === 'user') {
       // Get user's permissions from DB (or from JWT if you store them there)
       const dbUser = await this.prisma.user.findUnique({
         where: { id: userOrAccess.sub },

@@ -9,6 +9,7 @@ import {
   Req,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { RelationshipService } from './relationship.service';
 import { CreateRelationshipDto } from './dto/request/create-relationship.dto';
@@ -32,12 +33,17 @@ export class RelationshipController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.RELATIONSHIP__CREATE)
   create(
-    @Req() req: JwtAuthRequest,
+    @Req() { user }: JwtAuthRequest,
     @Body() createRelationshipDto: CreateRelationshipDto,
   ) {
+    if (!user.organizationId) {
+      throw new BadRequestException("Organization ID not found");
+    }
+
     return this.relationshipService.createRelationship(
       createRelationshipDto,
-      req.user.sub,
+      user.sub,
+      user.organizationId
     );
   }
 
@@ -82,12 +88,17 @@ export class RelationshipController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.RELATIONSHIP_TYPE__CREATE)
   createRelationshipType(
-    @Req() req: JwtAuthRequest,
+    @Req() { user }: JwtAuthRequest,
     @Body() createRelationshipDto: CreateRelationshipTypeDto,
   ) {
+    if (!user.organizationId) {
+      throw new BadRequestException("Organization ID not found");
+    }
+    
     return this.relationshipService.createRelationshipType(
       createRelationshipDto,
-      req.user.sub,
+      user.sub,
+      user.organizationId
     );
   }
 

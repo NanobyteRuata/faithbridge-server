@@ -8,6 +8,8 @@ import {
   Delete,
   UseGuards,
   Query,
+  Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { AddressService } from './address.service';
 import { CreateAddressDto } from './dto/request/create-address.dto';
@@ -17,6 +19,7 @@ import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { GetAddressesDto } from './dto/query/get-addresses.dto';
+import { JwtAuthRequest } from '../user/interface/requests.interface';
 
 @Controller('address')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -25,31 +28,39 @@ export class AddressController {
 
   @Post()
   @Permissions(PERMISSIONS.ADDRESS__CREATE)
-  create(@Body() createAddressDto: CreateAddressDto) {
-    return this.addressService.create(createAddressDto);
+  create(@Req() { user }: JwtAuthRequest, @Body() createAddressDto: CreateAddressDto) {
+    if (!user.organizationId) {
+      throw new BadRequestException('Organization ID not found');
+    }
+
+    return this.addressService.create(createAddressDto, user.organizationId);
   }
 
   @Get()
   @Permissions(PERMISSIONS.ADDRESS__READ)
-  findAll(@Query() query: GetAddressesDto) {
-    return this.addressService.findAll(query);
+  findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetAddressesDto) {
+    return this.addressService.findAll(query, user.organizationId);
   }
 
   @Get(':id')
   @Permissions(PERMISSIONS.ADDRESS__READ)
-  findOne(@Param('id') id: string) {
-    return this.addressService.findOne(+id);
+  findOne(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
+    return this.addressService.findOne(+id, user.organizationId);
   }
 
   @Patch(':id')
   @Permissions(PERMISSIONS.ADDRESS__UPDATE)
-  update(@Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
-    return this.addressService.update(+id, updateAddressDto);
+  update(@Req() { user }: JwtAuthRequest, @Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
+    if (!user.organizationId) {
+      throw new BadRequestException('Organization ID not found');
+    }
+
+    return this.addressService.update(+id, updateAddressDto, user.organizationId);
   }
 
   @Delete(':id')
   @Permissions(PERMISSIONS.ADDRESS__DELETE)
-  remove(@Param('id') id: string) {
+  remove(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
     return this.addressService.remove(+id);
   }
 }

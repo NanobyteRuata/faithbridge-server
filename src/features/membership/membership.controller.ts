@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { MembershipService } from './membership.service';
 import { CreateMembershipDto } from './dto/request/create-membership.dto';
@@ -28,10 +29,14 @@ export class MembershipController {
   @Post()
   @Permissions(PERMISSIONS.MEMBERSHIP__CREATE)
   create(
-    @Req() req: JwtAuthRequest,
+    @Req() { user }: JwtAuthRequest,
     @Body() createMembershipDto: CreateMembershipDto,
   ) {
-    return this.membershipService.create(createMembershipDto, req.user.sub);
+    if (!user.organizationId) {
+      throw new BadRequestException("Organization ID not found");
+    }
+
+    return this.membershipService.create(createMembershipDto, user.sub, user.organizationId);
   }
 
   @Get()

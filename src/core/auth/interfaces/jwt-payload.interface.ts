@@ -1,12 +1,20 @@
-export interface JwtUserPayload {
+export interface UserJwtPayload {
   sub: number;
   username: string;
-  profileId: number;
-  type: 'jwt';
+  name: string;
+  organizationId?: number;
+  organizationName?: string;
+  isSuperAdmin: boolean;
+  roleName: string | null;
+  permissions: string[] | null;
+  type: 'user';
 }
 
-export interface AccessCodeUserPayload {
+export interface AccessCodeJwtPayload {
   id: number;
+  name: string;
+  organizationId?: number;
+  organizationName?: string;
   permissions: string[];
   type: 'accessCode';
 }

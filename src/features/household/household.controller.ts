@@ -9,6 +9,7 @@ import {
   Req,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { HouseholdService } from './household.service';
 import { CreateHouseholdDto } from './dto/request/create-household.dto';
@@ -29,10 +30,14 @@ export class HouseholdController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.HOUSEHOLD__CREATE)
   create(
-    @Req() req: JwtAuthRequest,
+    @Req() { user }: JwtAuthRequest,
     @Body() createHouseholdDto: CreateHouseholdDto,
   ) {
-    return this.householdService.create(createHouseholdDto, req.user.sub);
+    if (!user.organizationId) {
+      throw new BadRequestException("Organization ID not found");
+    }
+
+    return this.householdService.create(createHouseholdDto, user.sub, user.organizationId);
   }
 
   @Get()

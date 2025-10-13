@@ -26,8 +26,8 @@ import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { LogoutDto } from './dto/request/logout.dto';
-import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
 import { ResetPasswordDto } from './dto/request/reset-password.dto';
+import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
 
 @Controller('user')
 export class UserController {
@@ -87,11 +87,12 @@ export class UserController {
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() { email, code, newPassword }: ResetPasswordDto) {
+  async resetPassword(@Body() { email, code, newPassword, organizationId }: ResetPasswordDto) {
     return await this.userService.resetPasswordWithCode(
       email,
       code,
       newPassword,
+      organizationId
     );
   }
 }

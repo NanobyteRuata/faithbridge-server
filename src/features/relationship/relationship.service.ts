@@ -16,10 +16,12 @@ export class RelationshipService {
   createRelationship(
     createRelationshipDto: CreateRelationshipDto,
     userId: number,
+    organizationId: number
   ) {
     return this.prisma.relationship.create({
       data: {
         ...createRelationshipDto,
+        organizationId,
         createdById: userId,
         updatedById: userId,
       },
@@ -87,10 +89,12 @@ export class RelationshipService {
   createRelationshipType(
     createRelationshipTypeDto: CreateRelationshipTypeDto,
     userId: number,
+    organizationId: number
   ) {
     return this.prisma.relationshipType.create({
       data: {
         ...createRelationshipTypeDto,
+        organizationId,
         createdById: userId,
         updatedById: userId,
       },
