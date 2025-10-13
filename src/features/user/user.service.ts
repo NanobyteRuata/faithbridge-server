@@ -23,7 +23,6 @@ import { ConfigService } from '@nestjs/config';
 import { LoginResponseDto } from './dto/response/login-response.dto';
 import { randomInt } from 'crypto';
 import { EmailService } from 'src/shared/services/email.service';
-import { ProfileService } from '../profile/profile.service';
 import { RegisterResponseDto } from './dto/response/register-response.dto';
 
 interface FindUniqieOrgUserParams {
@@ -49,8 +48,7 @@ export class UserService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
-    private emailService: EmailService,
-    private profileService: ProfileService,
+    private emailService: EmailService
   ) {}
 
   async findUniqueOrgUser(
@@ -167,7 +165,7 @@ export class UserService {
     userId: number,
     userOrganizationId?: number,
   ): Promise<RegisterResponseDto> {
-    const { username, email, password, organizationId } = registerDto;
+    const { username, email, password, organizationId, profileId } = registerDto;
 
     // Check if user already exists
     const userFilters = { username, email };
@@ -180,11 +178,6 @@ export class UserService {
     if (existingUser) {
       throw new ForbiddenException('Username already exists');
     }
-
-    const profile = await this.profileService.create(
-      registerDto.profile,
-      userId,
-    );
 
     // Hash password
     // eslint-disable-next-line
@@ -200,7 +193,7 @@ export class UserService {
         isActive: true,
         organizationId: organizationId ?? userOrganizationId,
         roleId: registerDto.roleId,
-        profileId: profile.id,
+        profileId: profileId,
         createdById: userId,
         updatedById: userId,
       },
