@@ -82,8 +82,8 @@ export class UserController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body() { email }: ForgotPasswordDto) {
-    return await this.userService.sendPasswordResetCode(email);
+  async forgotPassword(@Body() { email, organizationCode }: ForgotPasswordDto) {
+    return await this.userService.sendPasswordResetCode(email, organizationCode);
   }
 
   @Post('reset-password')

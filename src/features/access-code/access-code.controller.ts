@@ -20,13 +20,19 @@ import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { GetAccessCodesDto } from './dto/query/get-access-codes.dto';
+import { AccessCodeLoginDto } from './dto/request/access-code-login.dto';
 
 @Controller('access-code')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class AccessCodeController {
   constructor(private readonly accessCodeService: AccessCodeService) {}
 
+  @Post('login')
+  login(@Body() { accessCode, organizationCode }: AccessCodeLoginDto) {
+    return this.accessCodeService.login(accessCode, organizationCode);
+  }
+
   @Post()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ACCESS_CODE__CREATE)
   create(
     @Body() createAccessCodeDto: CreateAccessCodeDto,
@@ -40,6 +46,7 @@ export class AccessCodeController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ACCESS_CODE__READ)
   findAll(
     @Query() query: GetAccessCodesDto,
@@ -53,6 +60,7 @@ export class AccessCodeController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ACCESS_CODE__READ)
   findOne(@Param('id') id: string,
     @Req() { user }: JwtAuthRequest) {
@@ -60,6 +68,7 @@ export class AccessCodeController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ACCESS_CODE__UPDATE)
   update(
     @Req() { user }: JwtAuthRequest,
@@ -75,6 +84,7 @@ export class AccessCodeController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ACCESS_CODE__DELETE)
   remove(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
     return this.accessCodeService.remove(+id, user.sub, user.organizationId);

@@ -151,7 +151,6 @@ model Role {
   permissions Permission[]
   users       User[]
   accessCodes AccessCode[]
-  isSuperRole Boolean      @default(false)
 
   createdById Int?
   createdBy   User? @relation("RoleCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)

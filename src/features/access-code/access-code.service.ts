@@ -1,14 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAccessCodeDto } from './dto/request/create-access-code.dto';
 import { UpdateAccessCodeDto } from './dto/request/update-access-code.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { GetAccessCodesDto } from './dto/query/get-access-codes.dto';
 import { Prisma } from '@prisma/client';
+import { AccessCodeJwtPayload } from 'src/core/auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AccessCodeService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async validate(accessCode: string, organizationId: number): Promise<AccessCodeJwtPayload | null> {
+    const accessCodeEntities = await this.prisma.accessCode.findMany({
+      where: { organizationId },
+      include: { role: { include: { permissions: true } }, organization: true },
+    });
+    for (const entity of accessCodeEntities) {
+      const { id, expireDate, hashedCode, role, isActive } = entity;
+
+      const isExpired =
+        (expireDate && Date.now() > expireDate.getTime()) ?? false;
+      if (isExpired || !isActive) continue;
+
+      // eslint-disable-next-line
+      const isValid = await bcrypt.compare(accessCode, hashedCode);
+      if (isValid) {
+        return {
+          id,
+          name: entity.name,
+          organizationId: entity.organizationId,
+          organizationName: entity.organization.name,
+          permissions: role.permissions.map(
+            (p) => p.resource + '__' + p.action,
+          ),
+          type: 'accessCode',
+        };
+      }
+    }
+    return null;
+  }
+
+  async login(accessCode: string, organizationCode: string) {
+    const organization = await this.prisma.organization.findUnique({ where: { code: organizationCode } });
+    if (!organization) {
+      throw new NotFoundException();
+    }
+
+    return await this.validate(accessCode, organization.id);
+  }
 
   async create(createAccessCodeDto: CreateAccessCodeDto, userId: number) {
     const { code, ...rest } = createAccessCodeDto;

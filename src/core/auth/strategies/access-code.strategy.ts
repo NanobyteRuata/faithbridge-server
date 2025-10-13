@@ -1,49 +1,32 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy as CustomStrategy } from 'passport-custom';
 import { Request } from 'express';
-import { PrismaService } from 'src/core/prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
 import { AccessCodeJwtPayload } from '../interfaces/jwt-payload.interface';
+import { AccessCodeService } from 'src/features/access-code/access-code.service';
 
 @Injectable()
 export class AccessCodeStrategy extends PassportStrategy(
   CustomStrategy,
   'access-code',
 ) {
-  constructor(private prisma: PrismaService) {
+  constructor(private accessCodeService: AccessCodeService) {
     super();
   }
 
   async validate(req: Request): Promise<AccessCodeJwtPayload> {
-    const accessCode = (req.headers['x-access-code'] ||
-      req.query.accessCode) as string;
-    if (!accessCode) throw new UnauthorizedException('Access code required');
-    const accessCodeEntities = await this.prisma.accessCode.findMany({
-      include: { role: { include: { permissions: true } },organization: true },
-    });
-    for (const entity of accessCodeEntities) {
-      const { id, expireDate, hashedCode, role, isActive } = entity;
+    const accessCode = (req.headers['x-access-code']) as string;
+    const organizationId = Number(req.headers['x-org-id']);
 
-      const isExpired =
-        (expireDate && Date.now() > expireDate.getTime()) ?? false;
-      if (isExpired || !isActive) continue;
+    if (!accessCode) throw new BadRequestException('Access code required');
+    if (!organizationId) throw new BadRequestException('Organization ID required');
 
-      // eslint-disable-next-line
-      const isValid = await bcrypt.compare(accessCode, hashedCode);
-      if (isValid) {
-        return {
-          id,
-          name: entity.name,
-          organizationId: entity.organizationId,
-          organizationName: entity.organization.name,
-          permissions: role.permissions.map(
-            (p) => p.resource + '__' + p.action,
-          ),
-          type: 'accessCode',
-        };
-      }
+    const payload = await this.accessCodeService.validate(accessCode, organizationId);
+
+    if (!payload) {
+      throw new UnauthorizedException('Invalid access code');
     }
-    throw new UnauthorizedException('Invalid access code');
+
+    return payload;
   }
 }

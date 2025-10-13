@@ -1,12 +1,13 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserJwtPayload } from '../interfaces/jwt-payload.interface';
+import { PrismaService } from 'src/core/prisma/prisma.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private configService: ConfigService) {
+  constructor(private configService: ConfigService, private prisma: PrismaService) {
     // eslint-disable-next-line
     super({
       // eslint-disable-next-line
@@ -16,7 +17,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: UserJwtPayload) {
+  async validate(payload: UserJwtPayload) {
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user?.isActive) {
+      throw new UnauthorizedException();
+    }
+
     return payload;
   }
 }

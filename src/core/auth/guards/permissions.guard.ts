@@ -50,8 +50,12 @@ export class PermissionsGuard implements CanActivate {
         },
       });
 
-      if (!dbUser || !dbUser.role) {
-        throw new ForbiddenException('User has no role');
+      if (dbUser?.isSuperAdmin) {
+        return true;
+      }
+
+      if (!dbUser?.role) {
+        throw new ForbiddenException();
       }
 
       permissions = dbUser.role.permissions.map(
