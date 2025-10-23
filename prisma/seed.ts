@@ -7,14 +7,10 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 async function createSuperAdmin(): Promise<User> {
-  const email = process.env.SUPER_ADMIN_EMAIL;
-  const phone = process.env.SUPER_ADMIN_PHONE;
-  const username = process.env.SUPER_ADMIN_USERNAME;
-  const password = process.env.SUPER_ADMIN_PASSWORD;
-
-  if (!email || !phone || !username || !password) {
-    throw new Error('❌ Some required ENVs not found');
-  }
+  const email = process.env.SUPER_ADMIN_EMAIL ?? 'superadmin@faithbridge.com';
+  const phone = process.env.SUPER_ADMIN_PHONE ?? '09123123123';
+  const username = process.env.SUPER_ADMIN_USERNAME ?? 'superadmin';
+  const password = process.env.SUPER_ADMIN_PASSWORD ?? 'superadmin';
 
   // Check if user already exists
   const existing = await prisma.user.findFirst({
@@ -54,8 +50,8 @@ async function createSuperAdmin(): Promise<User> {
 async function createOrganization(superAdmin: User): Promise<Organization> {
   const organization = await prisma.organization.create({
     data: {
-      name: 'Test Org',
-      code: 'TSTORG',
+      name: process.env.ORG_NAME ?? 'Test Org',
+      code: process.env.ORG_CODE ?? 'TSTORG',
       createdById: superAdmin.id,
       updatedById: superAdmin.id,
     },
@@ -79,7 +75,7 @@ async function createOrgAdminRole(organizationId: number, superAdmin: User): Pro
   const role = prisma.role.create({
     data: {
       organizationId,
-      name: 'Org Admin Role',
+      name: process.env.ORG_ADMIN_ROLE_NAME ?? 'Org Admin Role',
       permissions: { connect: permissions },
       createdById: superAdmin.id,
       updatedById: superAdmin.id
@@ -95,10 +91,10 @@ async function createOrgAdmin(
   superAdmin: User,
   role: Role,
 ): Promise<User> {
-  const email = 'orgadmin@faithbridge.com';
-  const phone = '09123123123';
-  const username = 'orgadmin';
-  const password = 'orgadmin';
+  const email = process.env.ORG_ADMIN_EMAIL ?? 'orgadmin@faithbridge.com';
+  const phone = process.env.ORG_ADMIN_PHONE ?? '09123123123';
+  const username = process.env.ORG_ADMIN_USERNAME ?? 'orgadmin';
+  const password = process.env.ORG_ADMIN_PASSWORD ?? 'orgadmin';
 
   const existing = await prisma.user.findUnique({
     where: { email_organizationId: { email, organizationId } },
@@ -138,7 +134,7 @@ async function createOrgAccessKey(organizationId: number, superAdmin: User): Pro
   const role = await prisma.role.create({
     data: {
       organizationId,
-      name: 'Org Access Key Role',
+      name: process.env.ORG_ACCESS_KEY_ROLE_NAME ?? 'Org Access Key Role',
       permissions: { connect: permissions },
       createdById: superAdmin.id,
       updatedById: superAdmin.id
