@@ -7,10 +7,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
-import {
-  AccessCodeJwtPayload,
-  UserJwtPayload,
-} from '../interfaces/jwt-payload.interface';
+import { UserJwtPayload } from '../interfaces/jwt-payload.interface';
+import { AccessCodePayload } from '../interfaces/access-code-payload.interface';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -29,7 +27,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // eslint-disable-next-line
-    const request = context.switchToHttp().getRequest() as { user: UserJwtPayload | AccessCodeJwtPayload };
+    const request = context.switchToHttp().getRequest() as { user: UserJwtPayload | AccessCodePayload };
     const userOrAccess = request.user;
 
     if (!userOrAccess) {

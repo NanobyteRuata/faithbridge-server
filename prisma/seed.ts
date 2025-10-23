@@ -1,4 +1,4 @@
-import { Organization, PrismaClient, Role, User } from '@prisma/client';
+import { AccessCode, Organization, PrismaClient, Role, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import { PERMISSIONS } from '../src/shared/constants/permissions.constant';
@@ -132,11 +132,43 @@ async function createOrgAdmin(
   return orgAdmin;
 }
 
+async function createOrgAccessKey(organizationId: number, superAdmin: User): Promise<AccessCode> {
+  const permissions = await prisma.permission.findMany({ where: { organizationId, action: { in: [ 'READ_SELF', 'READ' ] } } })
+
+  const role = await prisma.role.create({
+    data: {
+      organizationId,
+      name: 'Org Access Key Role',
+      permissions: { connect: permissions },
+      createdById: superAdmin.id,
+      updatedById: superAdmin.id
+    },
+  });
+
+  const hashedCode = await bcrypt.hash('123456', 10);
+  
+  const accessKey = await prisma.accessCode.create({
+    data: {
+      name: 'Org Access Key',
+      hashedCode,
+      isActive: true,
+      role: { connect: role },
+      organization: { connect: { id: organizationId } },
+      createdBy: { connect: { id: superAdmin.id } },
+      updatedBy: { connect: { id: superAdmin.id } },
+    },
+  });
+
+  console.log('✅ Org access key created:', accessKey);
+  return accessKey;
+}
+
 async function main() {
   const superAdmin = await createSuperAdmin();
   const organization = await createOrganization(superAdmin);
   const orgAdminRole = await createOrgAdminRole(organization.id, superAdmin);
-  await createOrgAdmin(organization.id, superAdmin, orgAdminRole);
+  const orgAccessKey = await createOrgAccessKey(organization.id, superAdmin);
+  const orgAdmin = await createOrgAdmin(organization.id, superAdmin, orgAdminRole);
 }
 
 main()

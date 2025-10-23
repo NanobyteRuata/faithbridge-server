@@ -5,7 +5,7 @@ import { PrismaService } from 'src/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { GetAccessCodesDto } from './dto/query/get-access-codes.dto';
 import { Prisma } from '@prisma/client';
-import { AccessCodeJwtPayload } from 'src/core/auth/interfaces/jwt-payload.interface';
+import { AccessCodePayload } from 'src/core/auth/interfaces/access-code-payload.interface';
 
 @Injectable()
 export class AccessCodeService {
@@ -13,10 +13,10 @@ export class AccessCodeService {
 
   async validate(
     accessCode: string,
-    organizationId: number,
-  ): Promise<AccessCodeJwtPayload | null> {
+    organizationCode: string,
+  ): Promise<AccessCodePayload> {
     const accessCodeEntities = await this.prisma.accessCode.findMany({
-      where: { organizationId },
+      where: { organization: { code: organizationCode } },
       include: { role: { include: { permissions: true } }, organization: true },
     });
     for (const entity of accessCodeEntities) {
@@ -32,8 +32,6 @@ export class AccessCodeService {
         return {
           id,
           name: entity.name,
-          organizationId: entity.organizationId,
-          organizationName: entity.organization.name,
           permissions: role.permissions.map(
             (p) => p.resource + '__' + p.action,
           ),
@@ -41,18 +39,14 @@ export class AccessCodeService {
         };
       }
     }
-    return null;
+    throw new NotFoundException('Access code not found');
   }
 
-  async login(accessCode: string, organizationCode: string) {
-    const organization = await this.prisma.organization.findUnique({
-      where: { code: organizationCode },
-    });
-    if (!organization) {
-      throw new NotFoundException();
-    }
-
-    return await this.validate(accessCode, organization.id);
+  async login(
+    accessCode: string,
+    organizationCode: string,
+  ): Promise<AccessCodePayload> {
+    return await this.validate(accessCode, organizationCode);
   }
 
   async create(createAccessCodeDto: CreateAccessCodeDto, userId: number) {

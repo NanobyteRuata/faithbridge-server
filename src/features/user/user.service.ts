@@ -6,14 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
-import {
-  Organization,
-  Permission,
-  Prisma,
-  Profile,
-  Role,
-  User,
-} from '@prisma/client';
+import { Permission, Prisma, Role, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UserJwtPayload } from '../../core/auth/interfaces/jwt-payload.interface';
 import { Tokens } from './interface/tokens.interface';
@@ -48,7 +41,7 @@ export class UserService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
-    private emailService: EmailService
+    private emailService: EmailService,
   ) {}
 
   async findUniqueOrgUser(
@@ -143,7 +136,7 @@ export class UserService {
     userAgent?: string,
     ipAddress?: string,
   ): Promise<LoginResponseDto> {
-    const { accessToken, refreshToken } = await this.generateTokens(
+    const { accessToken, refreshToken, jwtPayload } = await this.generateTokens(
       user,
       deviceId,
     );
@@ -157,7 +150,12 @@ export class UserService {
       ipAddress,
     );
 
-    return new LoginResponseDto(accessToken, refreshToken, user, deviceId);
+    return new LoginResponseDto(
+      accessToken,
+      refreshToken,
+      deviceId,
+      jwtPayload?.permissions,
+    );
   }
 
   async register(
@@ -165,7 +163,8 @@ export class UserService {
     userId: number,
     userOrganizationId?: number,
   ): Promise<RegisterResponseDto> {
-    const { username, email, password, organizationId, profileId } = registerDto;
+    const { username, email, password, organizationId, profileId } =
+      registerDto;
 
     // Check if user already exists
     const userFilters = { username, email };
@@ -231,7 +230,8 @@ export class UserService {
     }
 
     // Generate new tokens
-    const tokens = await this.generateTokens(user, deviceId);
+    // eslint-disable-next-line
+    const { jwtPayload, ...tokens } = await this.generateTokens(user, deviceId);
 
     // Update refresh token in database
     await this.updateRefreshToken(session.id, tokens.refreshToken);
@@ -330,23 +330,11 @@ export class UserService {
 
   private async generateTokens(
     user: User & {
-      profile?: Profile | null;
       role?: (Role & { permissions?: Permission[] }) | null;
-      organization?: Organization | null;
     },
     deviceId: string,
   ): Promise<Tokens> {
-    let { profile, role, organization } = user;
-    const { username, organizationId, isSuperAdmin } = user;
-
-    if (!profile)
-      profile = await this.prisma.profile.findUnique({
-        where: { id: user.profileId },
-      });
-    let name = 'Unknown User';
-    if (profile) {
-      name = profile?.nickName ?? profile.name + ' ' + profile.lastName;
-    }
+    let { role } = user;
 
     if (user.roleId && (!role || (role && !role.permissions))) {
       role = await this.prisma.role.findUnique({
@@ -355,26 +343,17 @@ export class UserService {
       });
     }
 
-    let permissions: string[] | null = null;
+    let permissions: string[] = [];
     if (role?.permissions) {
       permissions = role.permissions.map(
         (permission) => permission.resource + '__' + permission.action,
       );
     }
 
-    if (!organization)
-      organization = await this.prisma.organization.findUnique({
-        where: { id: user.profileId },
-      });
-
     const jwtPayload: UserJwtPayload = {
       sub: user.id,
-      username,
-      name,
-      organizationId: organizationId ?? undefined,
-      organizationName: organization?.name ?? undefined,
-      isSuperAdmin,
-      roleName: role?.name ?? null,
+      organizationId: user.organizationId ?? undefined,
+      isSuperAdmin: user.isSuperAdmin,
       permissions,
       type: 'user',
     };
@@ -402,6 +381,7 @@ export class UserService {
     return {
       accessToken,
       refreshToken,
+      jwtPayload,
     };
   }
 
