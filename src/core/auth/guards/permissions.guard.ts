@@ -57,7 +57,7 @@ export class PermissionsGuard implements CanActivate {
       }
 
       permissions = dbUser.role.permissions.map(
-        (p) => p.resource + '__' + p.action,
+        (p) => p.permission,
       );
     }
 

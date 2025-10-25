@@ -9,12 +9,13 @@ import { Prisma } from '@prisma/client';
 export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createProfileDto: CreateProfileDto, userId: number) {
+  create(createProfileDto: CreateProfileDto, userId: number, organizationId?: number) {
     return this.prisma.profile.create({
       data: {
         ...createProfileDto,
         createdById: userId,
         updatedById: userId,
+        organizationId,
       },
       include: {
         status: true,
@@ -23,7 +24,7 @@ export class ProfileService {
     });
   }
 
-  async findAll({ skip, limit, search }: GetProfilesDto) {
+  async findAll({ skip, limit, search }: GetProfilesDto, organizationId?: number) {
     const args: Prisma.ProfileFindManyArgs = {
       skip,
       take: limit,
@@ -32,6 +33,7 @@ export class ProfileService {
           contains: search?.trim(),
           mode: 'insensitive',
         },
+        organizationId,
       },
       include: {
         status: true,
@@ -55,16 +57,16 @@ export class ProfileService {
     };
   }
 
-  findOne(id: number) {
+  findOne(id: number, organizationId?: number) {
     return this.prisma.profile.findUnique({
-      where: { id },
+      where: { id, organizationId },
       include: { status: true, membership: true },
     });
   }
 
-  update(id: number, updateProfileDto: UpdateProfileDto, userId: number) {
+  update(id: number, updateProfileDto: UpdateProfileDto, userId: number, organizationId?: number) {
     return this.prisma.profile.update({
-      where: { id },
+      where: { id, organizationId },
       data: {
         ...updateProfileDto,
         updatedById: userId,

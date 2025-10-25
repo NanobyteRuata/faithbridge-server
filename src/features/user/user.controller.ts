@@ -23,7 +23,6 @@ import {
   JwtAuthRequest,
 } from './interface/requests.interface';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { LogoutDto } from './dto/request/logout.dto';
 import { ResetPasswordDto } from './dto/request/reset-password.dto';
@@ -35,7 +34,7 @@ export class UserController {
 
   @Post('register')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.USER__CREATE)
+  @Permissions('SUPER_ADMIN')
   register(@Req() { user }: JwtAuthRequest, @Body() registerDto: RegisterDto) {
     return this.userService.register(
       registerDto,

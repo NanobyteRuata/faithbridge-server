@@ -3,6 +3,7 @@ import {
   IsArray,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -21,9 +22,9 @@ export class BulkCreatePermissionsDto {
 export class EachPermissionDto {
   @IsString()
   @IsNotEmpty()
-  resource: string;
+  permission: string;
 
   @IsString()
-  @IsNotEmpty()
-  action: string;
+  @IsOptional()
+  description: string | null = null;
 }

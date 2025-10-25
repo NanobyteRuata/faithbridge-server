@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BulkCreatePermissionsDto } from './dto/request/bulk-create-permissions.dto';
+import { BulkCreatePermissionsDto, EachPermissionDto } from './dto/request/bulk-create-permissions.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { GetPermissionsDto } from './dto/query/get-permissions.dto';
 import { Prisma } from '@prisma/client';
@@ -28,11 +28,11 @@ export class PermissionService {
       skip,
       take: limit,
       where: {
-        resource: {
+        permission: {
           contains: search?.trim(),
           mode: 'insensitive',
         },
-        action: {
+        description: {
           contains: search?.trim(),
           mode: 'insensitive',
         },
@@ -74,8 +74,7 @@ export class PermissionService {
       where: { organizationId },
     });
 
-    const makeKey = (p: { resource: string; action: string }) =>
-      JSON.stringify([p.resource, p.action]);
+    const makeKey = (p: EachPermissionDto) => p.permission;
 
     const inputSet = new Set(permissions.map(makeKey));
     const existingSet = new Set(existingPermissions.map(makeKey));
@@ -103,8 +102,7 @@ export class PermissionService {
         this.prisma.permission.deleteMany({
           where: {
             OR: toDelete.map((p) => ({
-              resource: p.resource,
-              action: p.action,
+              permission: p.permission,
               organizationId,
             })),
           },

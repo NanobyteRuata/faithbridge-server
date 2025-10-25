@@ -18,7 +18,6 @@ import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { GetOrganizationsDto } from './dto/query/get-organizations.dto';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 
 @Controller('organization')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -41,13 +40,13 @@ export class OrganizationController {
   }
 
   @Get(':id')
-  @Permissions(PERMISSIONS.ORGANIZATION__READ_SELF)
+  @Permissions('SUPER_ADMIN')
   findOne(@Param('id') id: string) {
     return this.organizationService.findOne(+id);
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.ORGANIZATION__UPDATE_SELF)
+  @Permissions('SUPER_ADMIN')
   update(
     @Req() { user }: JwtAuthRequest,
     @Param('id') id: string,

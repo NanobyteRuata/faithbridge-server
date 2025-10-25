@@ -33,7 +33,7 @@ export class AccessCodeService {
           id,
           name: entity.name,
           permissions: role.permissions.map(
-            (p) => p.resource + '__' + p.action,
+            (p) => p.permission,
           ),
           type: 'accessCode',
         };

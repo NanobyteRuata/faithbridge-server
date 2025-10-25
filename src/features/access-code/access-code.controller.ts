@@ -18,7 +18,6 @@ import { UseGuards } from '@nestjs/common';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { GetAccessCodesDto } from './dto/query/get-access-codes.dto';
 import { AccessCodeLoginDto } from './dto/request/access-code-login.dto';
 
@@ -33,7 +32,7 @@ export class AccessCodeController {
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ACCESS_CODE__CREATE)
+  @Permissions('SUPER_ADMIN')
   create(
     @Body() createAccessCodeDto: CreateAccessCodeDto,
     @Req() { user }: JwtAuthRequest,
@@ -49,7 +48,7 @@ export class AccessCodeController {
 
   @Get()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ACCESS_CODE__READ)
+  @Permissions('SUPER_ADMIN')
   findAll(@Query() query: GetAccessCodesDto, @Req() { user }: JwtAuthRequest) {
     if (!user.isSuperAdmin && user.organizationId !== query.organizationId) {
       return new BadRequestException(
@@ -62,14 +61,14 @@ export class AccessCodeController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ACCESS_CODE__READ)
+  @Permissions('SUPER_ADMIN')
   findOne(@Param('id') id: string, @Req() { user }: JwtAuthRequest) {
     return this.accessCodeService.findOne(+id, user.organizationId);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ACCESS_CODE__UPDATE)
+  @Permissions('SUPER_ADMIN')
   update(
     @Req() { user }: JwtAuthRequest,
     @Param('id') id: string,
@@ -85,7 +84,7 @@ export class AccessCodeController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ACCESS_CODE__DELETE)
+  @Permissions('SUPER_ADMIN')
   remove(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
     return this.accessCodeService.remove(+id, user.sub, user.organizationId);
   }

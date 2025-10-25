@@ -20,7 +20,6 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 
 @Controller('household')
 export class HouseholdController {
@@ -28,7 +27,7 @@ export class HouseholdController {
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.HOUSEHOLD__CREATE)
+  @Permissions('SUPER_ADMIN')
   create(
     @Req() { user }: JwtAuthRequest,
     @Body() createHouseholdDto: CreateHouseholdDto,
@@ -46,21 +45,21 @@ export class HouseholdController {
 
   @Get()
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.HOUSEHOLD__READ)
+  @Permissions('SUPER_ADMIN')
   findAll(@Query() query: GetHouseholdsDto) {
     return this.householdService.findAll(query);
   }
 
   @Get(':id')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.HOUSEHOLD__READ)
+  @Permissions('SUPER_ADMIN')
   findOne(@Param('id') id: string) {
     return this.householdService.findOne(+id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.HOUSEHOLD__UPDATE)
+  @Permissions('SUPER_ADMIN')
   update(
     @Req() req: JwtAuthRequest,
     @Param('id') id: string,
@@ -71,7 +70,7 @@ export class HouseholdController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.HOUSEHOLD__DELETE)
+  @Permissions('SUPER_ADMIN')
   remove(@Param('id') id: string, @Req() req: JwtAuthRequest) {
     return this.householdService.remove(+id, req.user.sub);
   }

@@ -345,9 +345,7 @@ export class UserService {
 
     let permissions: string[] = [];
     if (role?.permissions) {
-      permissions = role.permissions.map(
-        (permission) => permission.resource + '__' + permission.action,
-      );
+      permissions = role.permissions.map((permission) => permission.permission);
     }
 
     const jwtPayload: UserJwtPayload = {

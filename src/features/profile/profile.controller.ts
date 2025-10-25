@@ -18,8 +18,8 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
+import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 
 @Controller('profile')
 export class ProfileController {
@@ -32,32 +32,32 @@ export class ProfileController {
     @Req() req: JwtAuthRequest,
     @Body() createProfileDto: CreateProfileDto,
   ) {
-    return this.profileService.create(createProfileDto, req.user.sub);
+    return this.profileService.create(createProfileDto, req.user.sub, req.user.organizationId);
   }
 
   @Get()
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.PROFILE__READ)
-  findAll(@Query() query: GetProfilesDto) {
-    return this.profileService.findAll(query);
+  @Permissions(PERMISSIONS.PROFILE__VIEW)
+  findAll(@Query() query: GetProfilesDto, @Req() req: JwtAuthRequest) {
+    return this.profileService.findAll(query, req.user.organizationId);
   }
 
   @Get(':id')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.PROFILE__READ)
-  findOne(@Param('id') id: string) {
-    return this.profileService.findOne(+id);
+  @Permissions(PERMISSIONS.PROFILE__VIEW, PERMISSIONS.PROFILE__VIEW_SELF)
+  findOne(@Param('id') id: string, @Req() req: JwtAuthRequest) {
+    return this.profileService.findOne(+id, req.user.organizationId);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.PROFILE__UPDATE)
+  @Permissions(PERMISSIONS.PROFILE__UPDATE, PERMISSIONS.PROFILE__UPDATE_SELF)
   update(
     @Param('id') id: string,
     @Req() req: JwtAuthRequest,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    return this.profileService.update(+id, updateProfileDto, req.user.sub);
+    return this.profileService.update(+id, updateProfileDto, req.user.sub, req.user.organizationId);
   }
 
   @Delete(':id')

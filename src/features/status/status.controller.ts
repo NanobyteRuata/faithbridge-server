@@ -17,7 +17,6 @@ import { UpdateStatusDto } from './dto/request/update-status.dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
 import { GetStatusesDto } from './dto/query/get-statuses.dto';
 
@@ -27,7 +26,7 @@ export class StatusController {
   constructor(private readonly statusService: StatusService) {}
 
   @Post()
-  @Permissions(PERMISSIONS.STATUS__CREATE)
+  @Permissions('SUPER_ADMIN')
   create(
     @Body() createStatusDto: CreateStatusDto,
     @Req() { user }: JwtAuthRequest,
@@ -44,19 +43,19 @@ export class StatusController {
   }
 
   @Get()
-  @Permissions(PERMISSIONS.STATUS__READ)
+  @Permissions('SUPER_ADMIN')
   findAll(@Query() query: GetStatusesDto) {
     return this.statusService.findAll(query);
   }
 
   @Get(':id')
-  @Permissions(PERMISSIONS.STATUS__READ)
+  @Permissions('SUPER_ADMIN')
   findOne(@Param('id') id: string) {
     return this.statusService.findOne(+id);
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.STATUS__UPDATE)
+  @Permissions('SUPER_ADMIN')
   update(
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateStatusDto,
@@ -66,7 +65,7 @@ export class StatusController {
   }
 
   @Delete(':id')
-  @Permissions(PERMISSIONS.STATUS__DELETE)
+  @Permissions('SUPER_ADMIN')
   remove(@Param('id') id: string, @Req() req: JwtAuthRequest) {
     return this.statusService.remove(+id, req.user.sub);
   }

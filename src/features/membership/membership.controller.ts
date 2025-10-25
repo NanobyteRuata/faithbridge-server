@@ -17,7 +17,6 @@ import { UpdateMembershipDto } from './dto/request/update-membership.dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
 import { GetMembershipsDto } from './dto/query/get-memberships.dto';
 
@@ -27,7 +26,7 @@ export class MembershipController {
   constructor(private readonly membershipService: MembershipService) {}
 
   @Post()
-  @Permissions(PERMISSIONS.MEMBERSHIP__CREATE)
+  @Permissions('SUPER_ADMIN')
   create(
     @Req() { user }: JwtAuthRequest,
     @Body() createMembershipDto: CreateMembershipDto,
@@ -44,19 +43,19 @@ export class MembershipController {
   }
 
   @Get()
-  @Permissions(PERMISSIONS.MEMBERSHIP__READ)
+  @Permissions('SUPER_ADMIN')
   findAll(@Query() query: GetMembershipsDto) {
     return this.membershipService.findAll(query);
   }
 
   @Get(':id')
-  @Permissions(PERMISSIONS.MEMBERSHIP__READ)
+  @Permissions('SUPER_ADMIN')
   findOne(@Param('id') id: string) {
     return this.membershipService.findOne(+id);
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.MEMBERSHIP__UPDATE)
+  @Permissions('SUPER_ADMIN')
   update(
     @Param('id') id: string,
     @Req() req: JwtAuthRequest,
@@ -70,7 +69,7 @@ export class MembershipController {
   }
 
   @Delete(':id')
-  @Permissions(PERMISSIONS.MEMBERSHIP__DELETE)
+  @Permissions('SUPER_ADMIN')
   remove(@Param('id') id: string, @Req() req: JwtAuthRequest) {
     return this.membershipService.remove(+id, req.user.sub);
   }

@@ -136,8 +136,7 @@ model Permission {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  action      String
-  resource    String
+  permission  String
   description String?
 
   roles Role[]
@@ -152,7 +151,7 @@ model Permission {
 
   updatedAt DateTime? @updatedAt
 
-  @@unique([action, resource, organizationId], name: "action_resource_org")
+  @@unique([permission, organizationId], name: "permission_org")
   @@index([organizationId])
 }
 

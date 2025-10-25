@@ -17,7 +17,6 @@ import { UpdateAddressDto } from './dto/request/update-address.dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { GetAddressesDto } from './dto/query/get-addresses.dto';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
 
@@ -27,7 +26,7 @@ export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
   @Post()
-  @Permissions(PERMISSIONS.ADDRESS__CREATE)
+  @Permissions('SUPER_ADMIN')
   create(
     @Req() { user }: JwtAuthRequest,
     @Body() createAddressDto: CreateAddressDto,
@@ -40,19 +39,19 @@ export class AddressController {
   }
 
   @Get()
-  @Permissions(PERMISSIONS.ADDRESS__READ)
+  @Permissions('SUPER_ADMIN')
   findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetAddressesDto) {
     return this.addressService.findAll(query, user.organizationId);
   }
 
   @Get(':id')
-  @Permissions(PERMISSIONS.ADDRESS__READ)
+  @Permissions('SUPER_ADMIN')
   findOne(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
     return this.addressService.findOne(+id, user.organizationId);
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.ADDRESS__UPDATE)
+  @Permissions('SUPER_ADMIN')
   update(
     @Req() { user }: JwtAuthRequest,
     @Param('id') id: string,
@@ -70,7 +69,7 @@ export class AddressController {
   }
 
   @Delete(':id')
-  @Permissions(PERMISSIONS.ADDRESS__DELETE)
+  @Permissions('SUPER_ADMIN')
   remove(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
     return this.addressService.remove(+id, user.sub);
   }

@@ -36,14 +36,11 @@ export class PermissionController {
   @Get('constant')
   @Permissions('SUPER-ADMIN')
   constantPermissions() {
-    return Object.values(PERMISSIONS).map((permission) => {
-      const [resource, action] = permission.split('__');
-      return { resource, action };
-    });
+    return Object.keys(PERMISSIONS);
   }
 
   @Get()
-  @Permissions(PERMISSIONS.PERMISSION__READ)
+  @Permissions('SUPER_ADMIN')
   findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetPermissionsDto) {
     return this.permissionService.findAll(query, user.organizationId);
   }

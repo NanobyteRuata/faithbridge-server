@@ -20,7 +20,6 @@ import { JwtAuthRequest } from '../user/interface/requests.interface';
 import { GetRelationshipsDto } from './dto/query/get-relationships.dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 import { GetRelationshipTypesDto } from './dto/query/get-relationship-types.dto';
@@ -31,7 +30,7 @@ export class RelationshipController {
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP__CREATE)
+  @Permissions('SUPER_ADMIN')
   create(
     @Req() { user }: JwtAuthRequest,
     @Body() createRelationshipDto: CreateRelationshipDto,
@@ -49,21 +48,21 @@ export class RelationshipController {
 
   @Get()
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP__READ)
+  @Permissions('SUPER_ADMIN')
   findAll(@Query() query: GetRelationshipsDto) {
     return this.relationshipService.findAllRelationships(query);
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP__READ)
+  @Permissions('SUPER_ADMIN')
   findOne(@Param('id') id: string) {
     return this.relationshipService.findOneRelationship(+id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP__UPDATE)
+  @Permissions('SUPER_ADMIN')
   update(
     @Req() req: JwtAuthRequest,
     @Param('id') id: string,
@@ -78,7 +77,7 @@ export class RelationshipController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP__DELETE)
+  @Permissions('SUPER_ADMIN')
   remove(@Req() req: JwtAuthRequest, @Param('id') id: string) {
     return this.relationshipService.removeRelationship(+id, req.user.sub);
   }
@@ -86,7 +85,7 @@ export class RelationshipController {
   // Relationship Type
   @Post('type')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP_TYPE__CREATE)
+  @Permissions('SUPER_ADMIN')
   createRelationshipType(
     @Req() { user }: JwtAuthRequest,
     @Body() createRelationshipDto: CreateRelationshipTypeDto,
@@ -104,21 +103,21 @@ export class RelationshipController {
 
   @Get('type')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP_TYPE__READ)
+  @Permissions('SUPER_ADMIN')
   findAllRelationshipTypes(@Query() query: GetRelationshipTypesDto) {
     return this.relationshipService.findAllRelationshipTypes(query);
   }
 
   @Get('type/:id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP_TYPE__READ)
+  @Permissions('SUPER_ADMIN')
   findOneRelationshipType(@Param('id') id: string) {
     return this.relationshipService.findOneRelationshipType(+id);
   }
 
   @Patch('type/:id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP_TYPE__UPDATE)
+  @Permissions('SUPER_ADMIN')
   updateRelationshipType(
     @Req() req: JwtAuthRequest,
     @Param('id') id: string,
@@ -133,7 +132,7 @@ export class RelationshipController {
 
   @Delete('type/:id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.RELATIONSHIP_TYPE__DELETE)
+  @Permissions('SUPER_ADMIN')
   removeRelationshipType(@Req() req: JwtAuthRequest, @Param('id') id: string) {
     return this.relationshipService.removeRelationshipType(+id, req.user.sub);
   }
