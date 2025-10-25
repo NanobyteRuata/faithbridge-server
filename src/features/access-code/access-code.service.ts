@@ -20,7 +20,7 @@ export class AccessCodeService {
       include: { role: { include: { permissions: true } }, organization: true },
     });
     for (const entity of accessCodeEntities) {
-      const { id, expireDate, hashedCode, role, isActive } = entity;
+      const { id, expireDate, hashedCode, role, isActive, organizationId } = entity;
 
       const isExpired =
         (expireDate && Date.now() > expireDate.getTime()) ?? false;
@@ -32,6 +32,7 @@ export class AccessCodeService {
         return {
           id,
           name: entity.name,
+          organizationId,
           permissions: role.permissions.map(
             (p) => p.permission,
           ),

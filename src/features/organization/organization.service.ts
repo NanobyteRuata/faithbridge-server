@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateOrganizationDto } from './dto/request/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/request/update-organization.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
@@ -44,6 +44,11 @@ export class OrganizationService {
       },
       success: true,
     };
+  }
+
+  findSelfOrganization(organizationId?: number) {
+    if (!organizationId) throw new BadRequestException('Organization ID is required');
+    return this.prisma.organization.findUnique({ where: { id: organizationId } });
   }
 
   findOne(id: number) {

@@ -11,6 +11,8 @@ export enum PERMISSION_DESCRIPTION {
   PROFILE__UPDATE = 'Update any profile details',
   PROFILE__UPDATE_SELF = 'Update any self profile details',
   PROFILE__DELETE = 'Delete profile',
+  ORGANIZATION__VIEW_SELF = 'View self organization',
+  ORGANIZATION__UPDATE_SELF = 'Update any self organization details',
 }
 
 export const PERMISSIONS = Object.keys(PERMISSION_DESCRIPTION).reduce((acc, key) => {

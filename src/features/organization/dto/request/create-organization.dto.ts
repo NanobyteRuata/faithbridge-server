@@ -8,4 +8,12 @@ export class CreateOrganizationDto {
   @IsString()
   @IsNotEmpty()
   code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  subtitle: string;
+
+  @IsString()
+  @IsNotEmpty()
+  description: string;
 }
