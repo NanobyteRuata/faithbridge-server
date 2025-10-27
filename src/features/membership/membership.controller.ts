@@ -10,6 +10,7 @@ import {
   Req,
   Query,
   BadRequestException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { MembershipService } from './membership.service';
 import { CreateMembershipDto } from './dto/request/create-membership.dto';
@@ -17,60 +18,71 @@ import { UpdateMembershipDto } from './dto/request/update-membership.dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { JwtAuthRequest } from '../user/interface/requests.interface';
+import { HybridAuthRequest, JwtAuthRequest } from '../user/interface/requests.interface';
 import { GetMembershipsDto } from './dto/query/get-memberships.dto';
+import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
 @Controller('membership')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class MembershipController {
   constructor(private readonly membershipService: MembershipService) {}
 
   @Post()
-  @Permissions('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.MEMBERSHIP__CREATE)
   create(
     @Req() { user }: JwtAuthRequest,
     @Body() createMembershipDto: CreateMembershipDto,
   ) {
-    if (!user.organizationId) {
-      throw new BadRequestException('Organization ID not found');
+    const organizationId = createMembershipDto.organizationId || user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
     }
 
     return this.membershipService.create(
       createMembershipDto,
       user.sub,
-      user.organizationId,
+      organizationId,
     );
   }
 
   @Get()
-  @Permissions('SUPER_ADMIN')
-  findAll(@Query() query: GetMembershipsDto) {
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.MEMBERSHIP__VIEW)
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetMembershipsDto) {
+    if (user.organizationId) {
+      query.organizationId = user.organizationId;
+    }
     return this.membershipService.findAll(query);
   }
 
   @Get(':id')
-  @Permissions('SUPER_ADMIN')
-  findOne(@Param('id') id: string) {
-    return this.membershipService.findOne(+id);
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.MEMBERSHIP__VIEW)
+  findOne(@Req() { user }: HybridAuthRequest, @Param('id', ParseIntPipe) id: number) {
+    return this.membershipService.findOne(id, user.organizationId);
   }
 
   @Patch(':id')
-  @Permissions('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.MEMBERSHIP__UPDATE)
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Req() req: JwtAuthRequest,
     @Body() updateMembershipDto: UpdateMembershipDto,
   ) {
     return this.membershipService.update(
-      +id,
+      id,
       updateMembershipDto,
       req.user.sub,
+      req.user.organizationId,
     );
   }
 
   @Delete(':id')
-  @Permissions('SUPER_ADMIN')
-  remove(@Param('id') id: string, @Req() req: JwtAuthRequest) {
-    return this.membershipService.remove(+id, req.user.sub);
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.MEMBERSHIP__DELETE)
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: JwtAuthRequest) {
+    return this.membershipService.remove(id, req.user.sub, req.user.organizationId);
   }
 }

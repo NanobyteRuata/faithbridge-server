@@ -46,7 +46,7 @@ export class OrganizationController {
 
   @Get('self')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ORGANIZATION__VIEW_SELF)
+  @Permissions(PERMISSIONS.ORGANIZATION__VIEW)
   findSelfOrganization(@Req() { user }: HybridAuthRequest) {
     return this.organizationService.findSelfOrganization(user.organizationId);
   }
@@ -60,7 +60,7 @@ export class OrganizationController {
 
   @Patch('self')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ORGANIZATION__UPDATE_SELF)
+  @Permissions(PERMISSIONS.ORGANIZATION__UPDATE)
   updateSelf(
     @Req() { user }: JwtAuthRequest,
     @Body() selfUpdateOrganizationDto: SelfUpdateOrganizationDto,

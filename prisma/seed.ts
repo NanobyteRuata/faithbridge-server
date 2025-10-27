@@ -136,7 +136,7 @@ async function createOrgUserRole(organizationId: number, superAdmin: User, permi
     data: {
       organizationId,
       name: process.env.ORG_USER_ROLE_NAME ?? 'Org User Role',
-      permissions: { connect: permissions.filter(({permission}) => permission.includes('SELF')) },
+      permissions: { connect: permissions.filter(({permission}) => permission.includes('VIEW')) },
       createdById: superAdmin.id,
       updatedById: superAdmin.id
     },

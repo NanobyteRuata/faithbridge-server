@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateStatusDto } from './dto/request/create-status.dto';
 import { UpdateStatusDto } from './dto/request/update-status.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
@@ -52,11 +52,17 @@ export class StatusService {
     };
   }
 
-  findOne(id: number) {
-    return this.prisma.status.findUnique({ where: { id } });
+  async findOne(id: number, userOrgId?: number) {
+    const status = await this.prisma.status.findUnique({ where: { id } });
+    const isNotSameOrg = userOrgId && status?.organizationId !== userOrgId;
+    if (!status || isNotSameOrg) {
+      throw new BadRequestException('Status not found');
+    }
+    return status;
   }
 
-  update(id: number, updateStatusDto: UpdateStatusDto, userId: number) {
+  async update(id: number, updateStatusDto: UpdateStatusDto, userId: number, userOrgId?: number) {
+    await this.findOne(id, userOrgId); // this will throw BadRequestException if status not found
     return this.prisma.status.update({
       where: { id },
       data: {
@@ -66,7 +72,9 @@ export class StatusService {
     });
   }
 
-  remove(id: number, userId: number) {
+  async remove(id: number, userId: number, userOrgId?: number) {
+    await this.findOne(id, userOrgId); // this will throw BadRequestException if status not found
+    
     // TODO: use userId for activity logging later
     console.log(userId);
     return this.prisma.status.delete({ where: { id } });

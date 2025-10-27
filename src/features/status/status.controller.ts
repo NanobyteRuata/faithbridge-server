@@ -10,6 +10,7 @@ import {
   Req,
   Query,
   BadRequestException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { StatusService } from './status.service';
 import { CreateStatusDto } from './dto/request/create-status.dto';
@@ -17,56 +18,66 @@ import { UpdateStatusDto } from './dto/request/update-status.dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { JwtAuthRequest } from '../user/interface/requests.interface';
+import { HybridAuthRequest, JwtAuthRequest } from '../user/interface/requests.interface';
 import { GetStatusesDto } from './dto/query/get-statuses.dto';
+import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
 @Controller('status')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class StatusController {
   constructor(private readonly statusService: StatusService) {}
 
   @Post()
-  @Permissions('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.STATUS__CREATE)
   create(
     @Body() createStatusDto: CreateStatusDto,
     @Req() { user }: JwtAuthRequest,
   ) {
-    if (!user.organizationId) {
-      throw new BadRequestException('Organization ID not found');
+    const organizationId = createStatusDto.organizationId || user.organizationId;
+    if (!organizationId) {
+      throw new BadRequestException('Organization ID is required');
     }
 
     return this.statusService.create(
       createStatusDto,
       user.sub,
-      user.organizationId,
+      organizationId,
     );
   }
 
   @Get()
-  @Permissions('SUPER_ADMIN')
-  findAll(@Query() query: GetStatusesDto) {
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.STATUS__VIEW)
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetStatusesDto) {
+    if (user.organizationId) {
+      query.organizationId = user.organizationId;
+    }
     return this.statusService.findAll(query);
   }
 
   @Get(':id')
-  @Permissions('SUPER_ADMIN')
-  findOne(@Param('id') id: string) {
-    return this.statusService.findOne(+id);
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.STATUS__VIEW)
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() { user }: HybridAuthRequest) {
+    return this.statusService.findOne(id, user.organizationId);
   }
 
   @Patch(':id')
-  @Permissions('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.STATUS__UPDATE)
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateStatusDto: UpdateStatusDto,
     @Req() req: JwtAuthRequest,
   ) {
-    return this.statusService.update(+id, updateStatusDto, req.user.sub);
+    return this.statusService.update(id, updateStatusDto, req.user.sub, req.user.organizationId);
   }
 
   @Delete(':id')
-  @Permissions('SUPER_ADMIN')
-  remove(@Param('id') id: string, @Req() req: JwtAuthRequest) {
-    return this.statusService.remove(+id, req.user.sub);
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.STATUS__DELETE)
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: JwtAuthRequest) {
+    return this.statusService.remove(id, req.user.sub, req.user.organizationId);
   }
 }
