@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRoleDto } from './dto/request/create-role.dto';
 import { UpdateRoleDto } from './dto/request/update-role.dto';
 import { Permission, Prisma, Role } from '@prisma/client';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { GetRolesDto } from './dto/query/get-roles.dto';
 import { PaginatedDto } from 'src/shared/dto/response/paginated.dto';
+import { UserJwtPayload } from 'src/core/auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class RoleService {
@@ -101,17 +102,21 @@ export class RoleService {
       };
     }
 
-    const role = await this.prisma.role.update({
+    return await this.prisma.role.update({
       where: { id },
       data,
       include: { permissions: true },
     });
-    return role;
   }
 
-  async removeRole(id: number, userId: number): Promise<Role> {
+  async removeRole(id: number, user: UserJwtPayload): Promise<Role> {
+    const role = await this.findOneRole(id);
+    if (!user.isSuperAdmin && role.isOwner) {
+      throw new BadRequestException('Owner role cannot be deleted');
+    }
+
     // TODO: use userId for activity logging later
-    console.log('role removed by: user id:', userId);
+    console.log('role removed by: user id:', user.sub);
     return await this.prisma.role.delete({ where: { id } });
   }
 }

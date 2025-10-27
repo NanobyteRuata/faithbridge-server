@@ -1,6 +1,10 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateRoleDto {
+  @IsBoolean()
+  @IsNotEmpty()
+  isOwner: boolean;
+
   @IsString()
   @IsNotEmpty()
   name: string;

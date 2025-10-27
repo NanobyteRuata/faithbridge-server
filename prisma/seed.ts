@@ -79,6 +79,7 @@ async function createOrgAdminRole(organizationId: number, superAdmin: User, perm
     data: {
       organizationId,
       name: process.env.ORG_ADMIN_ROLE_NAME ?? 'Org Admin Role',
+      isOwner: true,
       permissions: { connect: permissions },
       createdById: superAdmin.id,
       updatedById: superAdmin.id

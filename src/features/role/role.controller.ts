@@ -9,6 +9,8 @@ import {
   Query,
   UseGuards,
   Req,
+  ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/request/create-role.dto';
@@ -33,8 +35,11 @@ export class RoleController {
 
   @Post()
   @Permissions(PERMISSIONS.ROLE__CREATE)
-  createRole(@Req() req: JwtAuthRequest, @Body() createRoleDto: CreateRoleDto) {
-    return this.roleService.createRole(createRoleDto, req.user.sub);
+  createRole(@Req() { user }: JwtAuthRequest, @Body() createRoleDto: CreateRoleDto) {
+    if (!user.isSuperAdmin) {
+      createRoleDto.isOwner = false;
+    }
+    return this.roleService.createRole(createRoleDto, user.sub);
   }
 
   @Get()
@@ -45,23 +50,26 @@ export class RoleController {
 
   @Get(':id')
   @Permissions(PERMISSIONS.ROLE__VIEW)
-  findOneRole(@Param('id') id: string) {
-    return this.roleService.findOneRole(+id);
+  findOneRole(@Param('id', ParseIntPipe) id: number) {
+    return this.roleService.findOneRole(id);
   }
 
   @Patch(':id')
   @Permissions(PERMISSIONS.ROLE__UPDATE)
   updateRole(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateRoleDto,
-    @Req() req: JwtAuthRequest,
+    @Req() { user }: JwtAuthRequest,
   ) {
-    return this.roleService.updateRole(+id, updateRoleDto, req.user.sub);
+    if (!user.isSuperAdmin && updateRoleDto.isOwner) {
+      delete updateRoleDto.permissions;
+    }
+    return this.roleService.updateRole(id, updateRoleDto, user.sub);
   }
 
   @Delete(':id')
   @Permissions(PERMISSIONS.ROLE__DELETE)
-  removeRole(@Param('id') id: string, @Req() req: JwtAuthRequest) {
-    return this.roleService.removeRole(+id, req.user.sub);
+  removeRole(@Param('id', ParseIntPipe) id: number, @Req() { user }: JwtAuthRequest) {
+    return this.roleService.removeRole(id, user);
   }
 }
