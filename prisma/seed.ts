@@ -131,12 +131,23 @@ async function createOrgAdmin(
   return orgAdmin;
 }
 
-async function createOrgUserRole(organizationId: number, superAdmin: User, permissions: Permission[]): Promise<Role> {
+async function createOrgUserRole(organizationId: number, superAdmin: User, allPermissions: Permission[]): Promise<Role> {
+  const userPermissionStrings = [
+    'USER__VIEW_SELF',
+    'USER__UPDATE_SELF',
+    'PROFILE__VIEW',
+    'PROFILE__VIEW_SELF',
+    'PROFILE__UPDATE_SELF',
+    'ORGANIZATION__VIEW',
+    'MEMBERSHIP__VIEW',
+    'STATUS__VIEW',
+  ];
+
   const role = prisma.role.create({
     data: {
       organizationId,
       name: process.env.ORG_USER_ROLE_NAME ?? 'Org User Role',
-      permissions: { connect: permissions.filter(({permission}) => permission.includes('VIEW')) },
+      permissions: { connect: allPermissions.filter(({permission}) => userPermissionStrings.includes(permission)) },
       createdById: superAdmin.id,
       updatedById: superAdmin.id
     },
@@ -188,14 +199,17 @@ async function createOrgUser(
   return orgUser;
 }
 
-async function createOrgAccessKey(organizationId: number, superAdmin: User): Promise<AccessCode> {
-  const permissions = await prisma.permission.findMany({ where: { organizationId, permission: { contains: 'VIEW' } } })
+async function createOrgAccessKey(organizationId: number, superAdmin: User, allPermissions: Permission[]): Promise<AccessCode> {
+  const accessKeyPermissionStrings = [
+    'PROFILE__VIEW',
+    'ORGANIZATION__VIEW'
+  ];
 
   const role = await prisma.role.create({
     data: {
       organizationId,
       name: process.env.ORG_ACCESS_KEY_ROLE_NAME ?? 'Org Access Key Role',
-      permissions: { connect: permissions },
+      permissions: { connect: allPermissions.filter(({permission}) => accessKeyPermissionStrings.includes(permission)) },
       createdById: superAdmin.id,
       updatedById: superAdmin.id
     },
@@ -222,12 +236,12 @@ async function createOrgAccessKey(organizationId: number, superAdmin: User): Pro
 async function main() {
   const superAdmin = await createSuperAdmin();
   const organization = await createOrganization(superAdmin);
-  const orgPermissions = await createOrganizationPermissions(organization.id, superAdmin);
-  const orgAdminRole = await createOrgAdminRole(organization.id, superAdmin, orgPermissions);
+  const allPermissions = await createOrganizationPermissions(organization.id, superAdmin);
+  const orgAdminRole = await createOrgAdminRole(organization.id, superAdmin, allPermissions);
   const orgAdmin = await createOrgAdmin(organization.id, superAdmin, orgAdminRole);
-  const orgUserRole = await createOrgUserRole(organization.id, orgAdmin, orgPermissions);
+  const orgUserRole = await createOrgUserRole(organization.id, orgAdmin, allPermissions);
   const orgUser = await createOrgUser(organization.id, orgAdmin, orgUserRole);
-  const orgAccessKey = await createOrgAccessKey(organization.id, superAdmin);
+  const orgAccessKey = await createOrgAccessKey(organization.id, superAdmin, allPermissions);
 }
 
 main()

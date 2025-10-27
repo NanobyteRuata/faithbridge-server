@@ -51,6 +51,9 @@ export class RoleService {
           mode: 'insensitive',
         },
       },
+      include: {
+        permissions: true,
+      },
     };
 
     const [roles, total] = await this.prisma.$transaction([

@@ -21,6 +21,10 @@ export enum PERMISSION_DESCRIPTION {
   STATUS__CREATE = 'Create status',
   STATUS__UPDATE = 'Update status details',
   STATUS__DELETE = 'Delete status',
+  ROLE__VIEW = 'View roles',
+  ROLE__CREATE = 'Create role',
+  ROLE__UPDATE = 'Update role details',
+  ROLE__DELETE = 'Delete role',
 }
 
 export const PERMISSIONS = Object.keys(PERMISSION_DESCRIPTION).reduce((acc, key) => {

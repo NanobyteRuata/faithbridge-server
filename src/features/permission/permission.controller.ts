@@ -16,7 +16,6 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
-import { GetPermissionsDto } from './dto/query/get-permissions.dto';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 
 @Controller('permission')
@@ -40,9 +39,9 @@ export class PermissionController {
   }
 
   @Get()
-  @Permissions('SUPER_ADMIN')
-  findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetPermissionsDto) {
-    return this.permissionService.findAll(query, user.organizationId);
+  @Permissions(PERMISSIONS.ROLE__CREATE, PERMISSIONS.ROLE__UPDATE)
+  findAll(@Req() { user }: JwtAuthRequest) {
+    return this.permissionService.findAll(user.organizationId);
   }
 
   @Patch()

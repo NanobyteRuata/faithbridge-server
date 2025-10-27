@@ -18,6 +18,7 @@ import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
+import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 
 @Controller('role')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -25,31 +26,31 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Get('permissions')
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ROLE__VIEW)
   findAllPermissions() {
     return this.roleService.findAllPermissions();
   }
 
   @Post()
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ROLE__CREATE)
   createRole(@Req() req: JwtAuthRequest, @Body() createRoleDto: CreateRoleDto) {
     return this.roleService.createRole(createRoleDto, req.user.sub);
   }
 
   @Get()
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ROLE__VIEW)
   findAllRoles(@Query() query: GetRolesDto) {
     return this.roleService.findAllRoles(query);
   }
 
   @Get(':id')
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ROLE__VIEW)
   findOneRole(@Param('id') id: string) {
     return this.roleService.findOneRole(+id);
   }
 
   @Patch(':id')
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ROLE__UPDATE)
   updateRole(
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateRoleDto,
@@ -59,7 +60,7 @@ export class RoleController {
   }
 
   @Delete(':id')
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ROLE__DELETE)
   removeRole(@Param('id') id: string, @Req() req: JwtAuthRequest) {
     return this.roleService.removeRole(+id, req.user.sub);
   }

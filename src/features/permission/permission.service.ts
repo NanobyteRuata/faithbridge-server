@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BulkCreatePermissionsDto, EachPermissionDto } from './dto/request/bulk-create-permissions.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
-import { GetPermissionsDto } from './dto/query/get-permissions.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -21,42 +20,16 @@ export class PermissionService {
   }
 
   async findAll(
-    { skip, limit, search }: GetPermissionsDto,
     organizationId?: number,
   ) {
-    const args: Prisma.PermissionFindManyArgs = {
-      skip,
-      take: limit,
-      where: {
-        permission: {
-          contains: search?.trim(),
-          mode: 'insensitive',
-        },
-        description: {
-          contains: search?.trim(),
-          mode: 'insensitive',
-        },
-        organization: {
-          name: {
-            contains: search?.trim(),
-            mode: 'insensitive',
-          },
-          id: organizationId,
-        },
-      },
-    };
-
-    const [permissions, total] = await this.prisma.$transaction([
-      this.prisma.permission.findMany(args),
-      this.prisma.permission.count({ where: args.where }),
-    ]);
+    const permissions = await this.prisma.permission.findMany({ where: { organizationId } });
 
     return {
       data: permissions,
       meta: {
-        page: skip,
-        limit,
-        total,
+        page: 1,
+        limit: permissions.length,
+        total: permissions.length,
       },
       success: true,
     };
