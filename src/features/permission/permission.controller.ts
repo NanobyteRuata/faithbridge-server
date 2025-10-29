@@ -39,7 +39,7 @@ export class PermissionController {
   }
 
   @Get()
-  @Permissions(PERMISSIONS.ROLE__CREATE, PERMISSIONS.ROLE__UPDATE)
+  @Permissions(PERMISSIONS.ROLE__EDIT)
   findAll(@Req() { user }: JwtAuthRequest) {
     return this.permissionService.findAll(user.organizationId);
   }

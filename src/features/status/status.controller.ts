@@ -29,7 +29,7 @@ export class StatusController {
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.STATUS__CREATE)
+  @Permissions(PERMISSIONS.STATUS__EDIT)
   create(
     @Body() createStatusDto: CreateStatusDto,
     @Req() { user }: JwtAuthRequest,
@@ -56,6 +56,16 @@ export class StatusController {
     return this.statusService.findAll(query);
   }
 
+  @Get('dropdown')
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.STATUS__VIEW)
+  findAllDropdown(@Req() { user }: HybridAuthRequest) {
+    if (!user.organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
+    return this.statusService.findAllDropdown(user.organizationId);
+  }
+
   @Get(':id')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.STATUS__VIEW)
@@ -65,7 +75,7 @@ export class StatusController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.STATUS__UPDATE)
+  @Permissions(PERMISSIONS.STATUS__EDIT)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateStatusDto: UpdateStatusDto,
@@ -76,7 +86,7 @@ export class StatusController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.STATUS__DELETE)
+  @Permissions(PERMISSIONS.STATUS__EDIT)
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: JwtAuthRequest) {
     return this.statusService.remove(id, req.user.sub, req.user.organizationId);
   }

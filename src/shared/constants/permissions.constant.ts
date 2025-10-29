@@ -14,17 +14,13 @@ export enum PERMISSION_DESCRIPTION {
   ORGANIZATION__VIEW = 'View self organization',
   ORGANIZATION__UPDATE = 'Update any self organization details',
   MEMBERSHIP__VIEW = 'View memberships',
-  MEMBERSHIP__CREATE = 'Create membership',
-  MEMBERSHIP__UPDATE = 'Update membership details',
-  MEMBERSHIP__DELETE = 'Delete membership',
+  MEMBERSHIP__EDIT = 'Edit memberships',
   STATUS__VIEW = 'View statuses',
-  STATUS__CREATE = 'Create status',
-  STATUS__UPDATE = 'Update status details',
-  STATUS__DELETE = 'Delete status',
+  STATUS__EDIT = 'Edit statuses',
   ROLE__VIEW = 'View roles',
-  ROLE__CREATE = 'Create role',
-  ROLE__UPDATE = 'Update role details',
-  ROLE__DELETE = 'Delete role',
+  ROLE__EDIT = 'Edit roles',
+  LOCATION_DATA__VIEW = 'View location data',
+  LOCATION_DATA__EDIT = 'Edit location data',
 }
 
 export const PERMISSIONS = Object.keys(PERMISSION_DESCRIPTION).reduce((acc, key) => {

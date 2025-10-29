@@ -29,6 +29,10 @@ model Organization {
   memberships       Membership[]
   statuses          Status[]
   addresses         Address[]
+  countries         Country[]
+  states            State[]
+  cities            City[]
+  townships         Township[]
   activityLogs      ActivityLog[]
   relationshipTypes RelationshipType[]
   relationships     Relationship[]
@@ -301,15 +305,74 @@ model Address {
 
   profiles Profile[]
 
-  room     String?
-  building String?
-  street   String
-  township String
-  city     String
-  state    String
-  zip      String?
-  country  String
+  room       String?
+  building   String?
+  street     String
+  road       String?
+  townshipId Int?
+  township   Township? @relation(fields: [townshipId], references: [id], onDelete: Cascade)
 
+  @@index([organizationId])
+}
+
+model Township {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  cityId Int
+  city   City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  name String
+
+  addresses Address[]
+
+  @@unique([name, cityId])
+  @@index([cityId])
+}
+
+model City {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  stateId Int
+  state   State @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  name String
+
+  townships Township[]
+
+  @@unique([name, stateId])
+  @@index([stateId])
+}
+
+model State {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  countryId Int
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  name String
+
+  cities City[]
+
+  @@unique([name, countryId])
+  @@index([countryId])
+}
+
+model Country {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name String
+
+  states State[]
+
+  @@unique([name, organizationId])
   @@index([organizationId])
 }
 

@@ -73,6 +73,13 @@ export class RoleService {
     };
   }
 
+  async findAllDropdown(organizationId: number) {
+    return await this.prisma.role.findMany({
+      where: { organizationId },
+      select: { id: true, name: true },
+    });
+  }
+
   async findOneRole(id: number): Promise<Role> {
     const role = await this.prisma.role.findUnique({
       where: { id },

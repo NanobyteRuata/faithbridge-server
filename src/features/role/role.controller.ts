@@ -34,7 +34,7 @@ export class RoleController {
   }
 
   @Post()
-  @Permissions(PERMISSIONS.ROLE__CREATE)
+  @Permissions(PERMISSIONS.ROLE__EDIT)
   createRole(@Req() { user }: JwtAuthRequest, @Body() createRoleDto: CreateRoleDto) {
     if (!user.isSuperAdmin) {
       createRoleDto.isOwner = false;
@@ -48,6 +48,15 @@ export class RoleController {
     return this.roleService.findAllRoles(query);
   }
 
+  @Get('dropdown')
+  @Permissions(PERMISSIONS.ROLE__VIEW)
+  findAllDropdown(@Req() { user }: JwtAuthRequest) {
+    if (!user.organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
+    return this.roleService.findAllDropdown(user.organizationId);
+  }
+
   @Get(':id')
   @Permissions(PERMISSIONS.ROLE__VIEW)
   findOneRole(@Param('id', ParseIntPipe) id: number) {
@@ -55,7 +64,7 @@ export class RoleController {
   }
 
   @Patch(':id')
-  @Permissions(PERMISSIONS.ROLE__UPDATE)
+  @Permissions(PERMISSIONS.ROLE__EDIT)
   updateRole(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateRoleDto,
@@ -68,7 +77,7 @@ export class RoleController {
   }
 
   @Delete(':id')
-  @Permissions(PERMISSIONS.ROLE__DELETE)
+  @Permissions(PERMISSIONS.ROLE__EDIT)
   removeRole(@Param('id', ParseIntPipe) id: number, @Req() { user }: JwtAuthRequest) {
     return this.roleService.removeRole(id, user);
   }

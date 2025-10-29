@@ -54,6 +54,13 @@ export class MembershipService {
     };
   }
 
+  findAllDropdown(organizationId: number) {
+    return this.prisma.membership.findMany({
+      where: { organizationId },
+      select: { id: true, name: true },
+    });
+  }
+
   async findOne(id: number, userOrgId?: number) {
     const membership = await this.prisma.membership.findUnique({ where: { id } });
     const isNotSameOrg = userOrgId && membership?.organizationId !== userOrgId;

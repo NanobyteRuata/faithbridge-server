@@ -60,7 +60,27 @@ export class ProfileService {
   findOne(id: number, organizationId?: number) {
     return this.prisma.profile.findUnique({
       where: { id, organizationId },
-      include: { status: true, membership: true },
+      include: {
+        status: true,
+        membership: true,
+        address: {
+          include: {
+            township: {
+              include: {
+                city: {
+                  include: {
+                    state: {
+                      include: {
+                        country: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
   }
 

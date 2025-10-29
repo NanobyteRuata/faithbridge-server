@@ -11,14 +11,14 @@ import {
   Req,
   BadRequestException,
 } from '@nestjs/common';
-import { AddressService } from './address.service';
-import { CreateAddressDto } from './dto/request/create-address.dto';
-import { UpdateAddressDto } from './dto/request/update-address.dto';
+import { AddressService } from '../services/address.service';
+import { CreateAddressDto } from '../dto/requests/address/create-address.dto';
+import { UpdateAddressDto } from '../dto/requests/address/update-address.dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
-import { GetAddressesDto } from './dto/query/get-addresses.dto';
-import { JwtAuthRequest } from '../user/interface/requests.interface';
+import { GetAddressesDto } from '../dto/query/get-addresses.dto';
+import { JwtAuthRequest } from '../../user/interface/requests.interface';
 
 @Controller('address')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -31,11 +31,12 @@ export class AddressController {
     @Req() { user }: JwtAuthRequest,
     @Body() createAddressDto: CreateAddressDto,
   ) {
-    if (!user.organizationId) {
+    const organizationId = user.organizationId || createAddressDto.organizationId;
+    if (!organizationId) {
       throw new BadRequestException('Organization ID not found');
     }
 
-    return this.addressService.create(createAddressDto, user.organizationId);
+    return this.addressService.create(createAddressDto, organizationId);
   }
 
   @Get()

@@ -1,20 +1,24 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsNumber, IsArray } from 'class-validator';
 import { PaginationDto } from 'src/shared/dto/query/pagination.dto';
 
 export class GetAddressesDto extends PaginationDto {
   @IsOptional()
-  @IsString()
-  township?: string;
+  @IsNumber()
+  @IsArray()
+  townshipIds?: number[];
 
   @IsOptional()
-  @IsString()
-  city?: string;
+  @IsNumber()
+  @IsArray()
+  cityIds?: number[];
 
   @IsOptional()
-  @IsString()
-  state?: string;
+  @IsNumber()
+  @IsArray()
+  stateIds?: number[];
 
   @IsOptional()
-  @IsString()
-  country?: string;
+  @IsNumber()
+  @IsArray()
+  countryIds?: number[];
 }

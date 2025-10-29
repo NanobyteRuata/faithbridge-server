@@ -52,6 +52,13 @@ export class StatusService {
     };
   }
 
+  async findAllDropdown(organizationId: number) {
+    return await this.prisma.status.findMany({
+      where: { organizationId },
+      select: { id: true, name: true },
+    });
+  }
+
   async findOne(id: number, userOrgId?: number) {
     const status = await this.prisma.status.findUnique({ where: { id } });
     const isNotSameOrg = userOrgId && status?.organizationId !== userOrgId;

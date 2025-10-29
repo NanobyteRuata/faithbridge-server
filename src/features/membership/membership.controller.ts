@@ -29,7 +29,7 @@ export class MembershipController {
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.MEMBERSHIP__CREATE)
+  @Permissions(PERMISSIONS.MEMBERSHIP__EDIT)
   create(
     @Req() { user }: JwtAuthRequest,
     @Body() createMembershipDto: CreateMembershipDto,
@@ -56,6 +56,16 @@ export class MembershipController {
     return this.membershipService.findAll(query);
   }
 
+  @Get('dropdown')
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.MEMBERSHIP__VIEW)
+  findAllDropdown(@Req() { user }: HybridAuthRequest) {
+    if (!user.organizationId) {
+      throw new BadRequestException('Organization ID is required');
+    }
+    return this.membershipService.findAllDropdown(user.organizationId);
+  }
+
   @Get(':id')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.MEMBERSHIP__VIEW)
@@ -65,7 +75,7 @@ export class MembershipController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.MEMBERSHIP__UPDATE)
+  @Permissions(PERMISSIONS.MEMBERSHIP__EDIT)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: JwtAuthRequest,
@@ -81,7 +91,7 @@ export class MembershipController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.MEMBERSHIP__DELETE)
+  @Permissions(PERMISSIONS.MEMBERSHIP__EDIT)
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: JwtAuthRequest) {
     return this.membershipService.remove(id, req.user.sub, req.user.organizationId);
   }
