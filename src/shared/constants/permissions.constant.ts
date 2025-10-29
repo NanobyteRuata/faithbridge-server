@@ -21,6 +21,8 @@ export enum PERMISSION_DESCRIPTION {
   ROLE__EDIT = 'Edit roles',
   LOCATION_DATA__VIEW = 'View location data',
   LOCATION_DATA__EDIT = 'Edit location data',
+  GROUP__VIEW = 'View groups',
+  GROUP__EDIT = 'Edit groups',
 }
 
 export const PERMISSIONS = Object.keys(PERMISSION_DESCRIPTION).reduce((acc, key) => {

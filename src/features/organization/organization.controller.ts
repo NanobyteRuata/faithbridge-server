@@ -21,7 +21,6 @@ import { GetOrganizationsDto } from './dto/query/get-organizations.dto';
 import { HybridAuthRequest, JwtAuthRequest } from '../user/interface/requests.interface';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
-import { SelfUpdateOrganizationDto } from './dto/request/self-update-organization.dto';
 
 @Controller('organization')
 export class OrganizationController {
@@ -63,11 +62,11 @@ export class OrganizationController {
   @Permissions(PERMISSIONS.ORGANIZATION__UPDATE)
   updateSelf(
     @Req() { user }: JwtAuthRequest,
-    @Body() selfUpdateOrganizationDto: SelfUpdateOrganizationDto,
+    @Body() updateOrganizationDto: UpdateOrganizationDto,
   ) {
     if (!user.organizationId) throw new BadRequestException('Organization ID is required');
 
-    return this.organizationService.update(user.organizationId, selfUpdateOrganizationDto, user.sub);
+    return this.organizationService.update(user.organizationId, updateOrganizationDto, user.sub);
   }
 
   @Patch(':id')

@@ -11,9 +11,9 @@ import { StatusModule } from './features/status/status.module';
 import { AccessCodeModule } from './features/access-code/access-code.module';
 import { RelationshipModule } from './features/relationship/relationship.module';
 import { AddressModule } from './features/address/address.module';
-import { HouseholdModule } from './features/household/household.module';
 import { OrganizationModule } from './features/organization/organization.module';
 import { PermissionModule } from './features/permission/permission.module';
+import { GroupModule } from './features/group/group.module';
 
 @Module({
   imports: [
@@ -29,9 +29,9 @@ import { PermissionModule } from './features/permission/permission.module';
     AccessCodeModule,
     RelationshipModule,
     AddressModule,
-    HouseholdModule,
     OrganizationModule,
     PermissionModule,
+    GroupModule,
   ],
 })
 export class AppModule {}
