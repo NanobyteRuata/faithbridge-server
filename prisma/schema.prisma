@@ -268,7 +268,7 @@ model Profile {
   otherContact3Type String?
   otherContact3     String?
 
-  address         Address[]
+  address Address[]
 
   relationships Relationship[] @relation("ProfileRelationship")
   relatedTo     Relationship[] @relation("ProfileRelated")
@@ -291,8 +291,9 @@ model Status {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  name        String
-  description String?
+  name           String
+  isActiveStatus Boolean @default(true)
+  description    String?
 
   profiles Profile[]
 
@@ -392,9 +393,10 @@ model Membership {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  name        String
-  description String?
-  profiles    Profile[]
+  name               String
+  description        String?
+  isActiveMembership Boolean   @default(true)
+  profiles           Profile[]
 
   createdById Int?
   createdBy   User? @relation("MembershipCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)

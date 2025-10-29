@@ -1,10 +1,13 @@
+import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsNumber,
+  ValidateNested,
 } from 'class-validator';
+import { CreateAddressDto } from 'src/features/address/dto/requests/address/create-address.dto';
 
 export class CreateProfileDto {
   @IsString()
@@ -71,6 +74,13 @@ export class CreateProfileDto {
   otherContact3?: string;
 
   @IsOptional()
+  @Type(() => CreateOrUpdateProfileAddressDto)
+  @ValidateNested({ each: true })
+  addresses?: CreateOrUpdateProfileAddressDto[];
+}
+
+export class CreateOrUpdateProfileAddressDto extends CreateAddressDto {
+  @IsOptional()
   @IsNumber()
-  addressId?: number;
+  id?: number;
 }

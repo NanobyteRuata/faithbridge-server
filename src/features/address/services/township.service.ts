@@ -61,9 +61,9 @@ export class TownshipService {
     };
   }
 
-  findAllDropdown(organizationId: number, cityId: number) {
+  findAllDropdown(organizationId: number, cityIds?: number[]) {
     return this.prisma.township.findMany({
-      where: { organizationId, cityId },
+      where: { organizationId, cityId: { in: cityIds } },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     });

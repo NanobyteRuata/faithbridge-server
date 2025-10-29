@@ -137,8 +137,6 @@ async function createOrgUserRole(organizationId: number, superAdmin: User, allPe
     'USER__VIEW_SELF',
     'USER__UPDATE_SELF',
     'PROFILE__VIEW',
-    'PROFILE__VIEW_SELF',
-    'PROFILE__UPDATE_SELF',
     'ORGANIZATION__VIEW',
     'MEMBERSHIP__VIEW',
     'STATUS__VIEW',

@@ -56,21 +56,16 @@ export class StateController {
   @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(
     PERMISSIONS.PROFILE__VIEW,
-    PERMISSIONS.PROFILE__UPDATE_SELF,
-    PERMISSIONS.PROFILE__CREATE,
-    PERMISSIONS.PROFILE__UPDATE,
+    PERMISSIONS.PROFILE__EDIT,
   )
   findAllDropdown(
     @Req() { user }: HybridAuthRequest,
-    @Query('countryId', ParseIntPipe) countryId: number,
+    @Query('countryIds') countryIds?: string[],
   ) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
     }
-    if (!countryId) {
-      throw new BadRequestException('Country ID is required');
-    }
-    return this.stateService.findAllDropdown(user.organizationId, countryId);
+    return this.stateService.findAllDropdown(user.organizationId, countryIds?.map(Number));
   }
 
   @Get(':id')

@@ -56,9 +56,7 @@ export class CountryController {
   @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(
     PERMISSIONS.PROFILE__VIEW,
-    PERMISSIONS.PROFILE__UPDATE_SELF,
-    PERMISSIONS.PROFILE__CREATE,
-    PERMISSIONS.PROFILE__UPDATE,
+    PERMISSIONS.PROFILE__EDIT,
   )
   findAllDropdown(@Req() { user }: HybridAuthRequest) {
     if (!user.organizationId) {

@@ -55,9 +55,9 @@ export class CityService {
     };
   }
 
-  findAllDropdown(organizationId: number, stateId: number) {
+  findAllDropdown(organizationId: number, stateIds?: number[]) {
     return this.prisma.city.findMany({
-      where: { organizationId, stateId },
+      where: { organizationId, stateId: { in: stateIds } },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     });

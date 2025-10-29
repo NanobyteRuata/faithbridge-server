@@ -52,9 +52,9 @@ export class StateService {
     };
   }
 
-  findAllDropdown(organizationId: number, countryId: number) {
+  findAllDropdown(organizationId: number, countryIds?: number[]) {
     return this.prisma.state.findMany({
-      where: { organizationId, countryId },
+      where: { organizationId, countryId: { in: countryIds } },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     });

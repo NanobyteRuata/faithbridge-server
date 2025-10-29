@@ -27,7 +27,7 @@ export class ProfileController {
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.PROFILE__CREATE)
+  @Permissions(PERMISSIONS.PROFILE__EDIT)
   create(
     @Req() req: JwtAuthRequest,
     @Body() createProfileDto: CreateProfileDto,
@@ -51,7 +51,7 @@ export class ProfileController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.PROFILE__UPDATE, PERMISSIONS.PROFILE__UPDATE_SELF)
+  @Permissions(PERMISSIONS.PROFILE__EDIT)
   update(
     @Param('id') id: string,
     @Req() req: JwtAuthRequest,
@@ -62,7 +62,7 @@ export class ProfileController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.PROFILE__DELETE)
+  @Permissions(PERMISSIONS.PROFILE__EDIT)
   remove(@Req() req: JwtAuthRequest, @Param('id') id: string) {
     return this.profileService.remove(+id, req.user.sub);
   }

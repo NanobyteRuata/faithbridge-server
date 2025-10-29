@@ -56,30 +56,23 @@ export class CityController {
   @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(
     PERMISSIONS.PROFILE__VIEW,
-    PERMISSIONS.PROFILE__UPDATE_SELF,
-    PERMISSIONS.PROFILE__CREATE,
-    PERMISSIONS.PROFILE__UPDATE,
+    PERMISSIONS.PROFILE__EDIT,
   )
   findAllDropdown(
     @Req() { user }: HybridAuthRequest,
-    @Query('stateId', ParseIntPipe) stateId: number,
+    @Query('stateIds') stateIds?: string[],
   ) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
     }
-    if (!stateId) {
-      throw new BadRequestException('State ID is required');
-    }
-    return this.cityService.findAllDropdown(user.organizationId, stateId);
+    return this.cityService.findAllDropdown(user.organizationId, stateIds?.map(Number));
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(
     PERMISSIONS.PROFILE__VIEW,
-    PERMISSIONS.PROFILE__UPDATE_SELF,
-    PERMISSIONS.PROFILE__CREATE,
-    PERMISSIONS.PROFILE__UPDATE,
+    PERMISSIONS.PROFILE__EDIT,
   )
   findOne(
     @Req() { user }: JwtAuthRequest,

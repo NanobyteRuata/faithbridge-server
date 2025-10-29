@@ -5,26 +5,57 @@ import { PrismaService } from 'src/core/prisma/prisma.service';
 import { GetProfilesDto } from './dto/query/get-profiles.dto';
 import { Prisma } from '@prisma/client';
 
+const addressInclude = {
+  address: {
+    include: {
+      township: {
+        include: {
+          city: {
+            include: {
+              state: {
+                include: {
+                  country: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};
+
 @Injectable()
 export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createProfileDto: CreateProfileDto, userId: number, organizationId?: number) {
+  async create(createProfileDto: CreateProfileDto, userId: number, organizationId?: number) {
+    const { addresses, ...profileData } = createProfileDto;
+
     return this.prisma.profile.create({
       data: {
-        ...createProfileDto,
+        ...profileData,
         createdById: userId,
         updatedById: userId,
         organizationId,
+        ...(addresses && addresses.length > 0 && {
+          address: {
+            create: addresses.map((addr) => ({
+              ...addr,
+              organizationId: organizationId!,
+            })),
+          },
+        }),
       },
       include: {
         status: true,
         membership: true,
+        ...addressInclude,
       },
     });
   }
 
-  async findAll({ skip, limit, search }: GetProfilesDto, organizationId?: number) {
+  async findAll({ skip, limit, search, membershipIds, statusIds, townshipIds, cityIds, stateIds, countryIds }: GetProfilesDto, organizationId?: number) {
     const args: Prisma.ProfileFindManyArgs = {
       skip,
       take: limit,
@@ -34,10 +65,17 @@ export class ProfileService {
           mode: 'insensitive',
         },
         organizationId,
+        ...(statusIds ? { statusId: { in: statusIds } } : { status: { isActiveStatus: true } }),
+        ...(membershipIds ? { membershipId: { in: membershipIds } } : { membership: { isActiveMembership: true } }),
+        ...(townshipIds ? { townshipId: { in: townshipIds } } : {}),
+        ...(!townshipIds && cityIds ? { cityId: { in: cityIds } } : {}),
+        ...(!townshipIds && !cityIds && stateIds ? { stateId: { in: stateIds } } : {}),
+        ...(!townshipIds && !cityIds && !stateIds && countryIds ? { countryId: { in: countryIds } } : {}),
       },
       include: {
         status: true,
         membership: true,
+        ...addressInclude,
       },
     };
 
@@ -63,38 +101,87 @@ export class ProfileService {
       include: {
         status: true,
         membership: true,
-        address: {
-          include: {
-            township: {
-              include: {
-                city: {
-                  include: {
-                    state: {
-                      include: {
-                        country: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+        ...addressInclude,
       },
     });
   }
 
-  update(id: number, updateProfileDto: UpdateProfileDto, userId: number, organizationId?: number) {
-    return this.prisma.profile.update({
-      where: { id, organizationId },
-      data: {
-        ...updateProfileDto,
-        updatedById: userId,
-      },
-      include: {
-        status: true,
-        membership: true,
-      },
+  async update(id: number, updateProfileDto: UpdateProfileDto, userId: number, organizationId?: number) {
+    const { addresses, ...profileData } = updateProfileDto;
+
+    return this.prisma.$transaction(async (tx) => {
+      // If addresses are provided, handle create/update/delete
+      if (addresses !== undefined) {
+        const existingAddresses = await tx.address.findMany({
+          where: { profiles: { some: { id } } },
+          select: { id: true },
+        });
+
+        const incomingIds = addresses.filter((addr) => addr.id).map((addr) => addr.id!);
+        const toDelete = existingAddresses.filter((addr) => !incomingIds.includes(addr.id));
+
+        // Delete addresses not in the incoming array
+        if (toDelete.length > 0) {
+          await tx.address.deleteMany({
+            where: { id: { in: toDelete.map((addr) => addr.id) } },
+          });
+        }
+
+        // Update existing addresses
+        const toUpdate = addresses.filter((addr) => addr.id);
+        for (const addr of toUpdate) {
+          const { id: addrId, ...addrData } = addr;
+          await tx.address.update({
+            where: { id: addrId },
+            data: addrData,
+          });
+        }
+
+        // Create new addresses
+        const toCreate = addresses.filter((addr) => !addr.id);
+        if (toCreate.length > 0) {
+          await tx.address.createMany({
+            data: toCreate.map((addr) => ({
+              ...addr,
+              organizationId: organizationId!,
+            })),
+          });
+
+          // Connect new addresses to profile
+          const newAddresses = await tx.address.findMany({
+            where: {
+              organizationId,
+              id: { notIn: existingAddresses.map((a) => a.id) },
+              profiles: { none: {} },
+            },
+            orderBy: { id: 'desc' },
+            take: toCreate.length,
+          });
+
+          await tx.profile.update({
+            where: { id },
+            data: {
+              address: {
+                connect: newAddresses.map((addr) => ({ id: addr.id })),
+              },
+            },
+          });
+        }
+      }
+
+      // Update profile data
+      return tx.profile.update({
+        where: { id, organizationId },
+        data: {
+          ...profileData,
+          updatedById: userId,
+        },
+        include: {
+          status: true,
+          membership: true,
+          ...addressInclude,
+        },
+      });
     });
   }
 

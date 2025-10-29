@@ -25,7 +25,7 @@ export class RegisterResponseDto {
       personalEmail: user.profile.personalEmail,
       workEmail: user.profile.workEmail,
       personalPhone: user.profile.personalPhone,
-      workPhone: user.profile.workPhone,
+      homePhone: user.profile.homePhone,
       otherContact1Type: user.profile.otherContact1Type,
       otherContact1: user.profile.otherContact1,
       otherContact2Type: user.profile.otherContact2Type,

@@ -56,21 +56,16 @@ export class TownshipController {
   @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(
     PERMISSIONS.PROFILE__VIEW,
-    PERMISSIONS.PROFILE__UPDATE_SELF,
-    PERMISSIONS.PROFILE__CREATE,
-    PERMISSIONS.PROFILE__UPDATE,
+    PERMISSIONS.PROFILE__EDIT,
   )
   findAllDropdown(
     @Req() { user }: HybridAuthRequest,
-    @Query('cityId', ParseIntPipe) cityId: number,
+    @Query('cityIds') cityIds?: string[],
   ) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
     }
-    if (!cityId) {
-      throw new BadRequestException('City ID is required');
-    }
-    return this.townshipService.findAllDropdown(user.organizationId, cityId);
+    return this.townshipService.findAllDropdown(user.organizationId, cityIds?.map(Number));
   }
 
   @Get(':id')
