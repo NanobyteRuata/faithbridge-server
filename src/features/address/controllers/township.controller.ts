@@ -55,10 +55,6 @@ export class TownshipController {
 
   @Get('dropdown')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(
-    PERMISSIONS.PROFILE__VIEW,
-    PERMISSIONS.PROFILE__EDIT,
-  )
   findAllDropdown(
     @Req() { user }: HybridAuthRequest,
     @Query('cityIds', new ParseArrayPipe({ items: Number, optional: true })) cityIds?: number[],

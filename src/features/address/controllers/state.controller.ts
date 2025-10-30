@@ -55,10 +55,6 @@ export class StateController {
 
   @Get('dropdown')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(
-    PERMISSIONS.PROFILE__VIEW,
-    PERMISSIONS.PROFILE__EDIT,
-  )
   findAllDropdown(
     @Req() { user }: HybridAuthRequest,
     @Query('countryIds', new ParseArrayPipe({ items: Number, optional: true })) countryIds?: number[],

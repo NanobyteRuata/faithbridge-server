@@ -136,8 +136,6 @@ async function createOrgUserRole(organizationId: number, superAdmin: User, allPe
   const userPermissionStrings = [
     'USER__VIEW_SELF',
     'USER__UPDATE_SELF',
-    'PROFILE__VIEW',
-    'ORGANIZATION__VIEW',
     'MEMBERSHIP__VIEW',
     'STATUS__VIEW',
   ];
@@ -199,16 +197,10 @@ async function createOrgUser(
 }
 
 async function createOrgAccessKey(organizationId: number, superAdmin: User, allPermissions: Permission[]): Promise<AccessCode> {
-  const accessKeyPermissionStrings = [
-    'PROFILE__VIEW',
-    'ORGANIZATION__VIEW'
-  ];
-
   const role = await prisma.role.create({
     data: {
       organizationId,
       name: process.env.ORG_ACCESS_KEY_ROLE_NAME ?? 'Org Access Key Role',
-      permissions: { connect: allPermissions.filter(({permission}) => accessKeyPermissionStrings.includes(permission)) },
       createdById: superAdmin.id,
       updatedById: superAdmin.id
     },

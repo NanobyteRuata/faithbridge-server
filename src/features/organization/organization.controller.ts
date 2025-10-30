@@ -45,7 +45,6 @@ export class OrganizationController {
 
   @Get('self')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ORGANIZATION__VIEW)
   findSelfOrganization(@Req() { user }: HybridAuthRequest) {
     return this.organizationService.findSelfOrganization(user.organizationId);
   }
