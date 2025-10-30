@@ -11,6 +11,7 @@ import {
   Req,
   BadRequestException,
   ParseIntPipe,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { StateService } from '../services/state.service';
 import { CreateStateDto } from '../dto/requests/state/create-state.dto';
@@ -60,12 +61,12 @@ export class StateController {
   )
   findAllDropdown(
     @Req() { user }: HybridAuthRequest,
-    @Query('countryIds') countryIds?: string[],
+    @Query('countryIds', new ParseArrayPipe({ items: Number, optional: true })) countryIds?: number[],
   ) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
     }
-    return this.stateService.findAllDropdown(user.organizationId, countryIds?.map(Number));
+    return this.stateService.findAllDropdown(user.organizationId, countryIds);
   }
 
   @Get(':id')

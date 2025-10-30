@@ -15,13 +15,16 @@ export class HybridAuthGuard extends AuthGuard(['jwt', 'access-code']) {
       const jwtResult = await jwtGuard.canActivate(context);
       if (jwtResult) return true;
     } catch {
-      // JWT failed, try access code
+      try {
+        // Try access code
+        const accessCodeGuard = new (AuthGuard('access-code'))();
+        const accessCodeResult = await accessCodeGuard.canActivate(context);
+        if (accessCodeResult) return true;
+      } catch {
+        // Both failed
+        throw new UnauthorizedException('No valid authentication');
+      }
     }
-
-    // Try access code
-    const accessCodeGuard = new (AuthGuard('access-code'))();
-    const accessCodeResult = await accessCodeGuard.canActivate(context);
-    if (accessCodeResult) return true;
 
     throw new UnauthorizedException('No valid authentication');
   }

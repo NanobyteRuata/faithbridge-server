@@ -11,6 +11,7 @@ import {
   Req,
   BadRequestException,
   ParseIntPipe,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { TownshipService } from '../services/township.service';
 import { CreateTownshipDto } from '../dto/requests/township/create-township.dto';
@@ -60,12 +61,14 @@ export class TownshipController {
   )
   findAllDropdown(
     @Req() { user }: HybridAuthRequest,
-    @Query('cityIds') cityIds?: string[],
+    @Query('cityIds', new ParseArrayPipe({ items: Number, optional: true })) cityIds?: number[],
+    @Query('stateIds', new ParseArrayPipe({ items: Number, optional: true })) stateIds?: number[],
+    @Query('countryIds', new ParseArrayPipe({ items: Number, optional: true })) countryIds?: number[],
   ) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
     }
-    return this.townshipService.findAllDropdown(user.organizationId, cityIds?.map(Number));
+    return this.townshipService.findAllDropdown(user.organizationId, cityIds, stateIds, countryIds);
   }
 
   @Get(':id')

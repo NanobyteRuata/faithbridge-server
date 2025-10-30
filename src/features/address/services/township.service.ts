@@ -61,9 +61,14 @@ export class TownshipService {
     };
   }
 
-  findAllDropdown(organizationId: number, cityIds?: number[]) {
+  findAllDropdown(organizationId: number, cityIds?: number[], stateIds?: number[], countryIds?: number[]) {
     return this.prisma.township.findMany({
-      where: { organizationId, cityId: { in: cityIds } },
+      where: {
+        organizationId,
+        cityId: { in: cityIds },
+        ...(!cityIds?.length && stateIds?.length ? { city: { stateId: { in: stateIds } } } : {}),
+        ...(!cityIds?.length && !stateIds?.length && countryIds?.length ? { city: { state: { countryId: { in: countryIds } } } } : {}),
+      },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     });
