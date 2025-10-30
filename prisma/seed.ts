@@ -132,6 +132,163 @@ async function createOrgAdmin(
   return orgAdmin;
 }
 
+async function createLocationData(organizationId: number) {
+  const countries = [
+    {
+      name: 'Myanmar',
+      states: [
+        {
+          name: 'Yangon',
+          cities: [
+            {
+              name: 'Yangon',
+              townships: [
+                {
+                  name: 'Pabedan'
+                },
+                {
+                  name: 'Kyauktada'
+                }
+              ]
+            },
+            {
+              name: 'Thanlyin',
+              townships: [
+                {
+                  name: 'Thanlyin'
+                },
+                {
+                  name: 'Kyauktan'
+                },
+                {
+                  name: 'Thongwa'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          name: 'Mandalay',
+          cities: [
+            {
+              name: 'Mandalay',
+              townships: [
+                {
+                  name: 'Maha Aungmye'
+                },
+                {
+                  name: 'Myingyan'
+                }
+              ]
+            },
+            {
+              name: 'Pyinoolwin',
+              townships: [
+                {
+                  name: 'Maymyo'
+                },
+                {
+                  name: 'Thabeikkyin'
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      name: 'Thailand',
+      states: [
+        {
+          name: 'Bangkok',
+          cities: [
+            {
+              name: 'Bangkok',
+              townships: [
+                {
+                  name: 'Watthana'
+                },
+                {
+                  name: 'Khlong Toei'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          name: 'Chiang Mai',
+          cities: [
+            {
+              name: 'Chiang Mai',
+              townships: [
+                {
+                  name: 'Nimmanhaemin'
+                },
+                {
+                  name: 'Chaiyaphum'
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ];
+
+  for (const countryData of countries) {
+    // Create country
+    const country = await prisma.country.create({
+      data: {
+        name: countryData.name,
+        organizationId,
+      },
+    });
+
+    console.log(`✅ Country created: ${country.name}`);
+
+    // Create states for this country
+    for (const stateData of countryData.states) {
+      const state = await prisma.state.create({
+        data: {
+          name: stateData.name,
+          countryId: country.id,
+          organizationId,
+        },
+      });
+
+      console.log(`  ✅ State created: ${state.name}`);
+
+      // Create cities for this state
+      for (const cityData of stateData.cities) {
+        const city = await prisma.city.create({
+          data: {
+            name: cityData.name,
+            stateId: state.id,
+            organizationId,
+          },
+        });
+
+        console.log(`    ✅ City created: ${city.name}`);
+
+        // Create townships for this city
+        for (const townshipData of cityData.townships) {
+          const township = await prisma.township.create({
+            data: {
+              name: townshipData.name,
+              cityId: city.id,
+              organizationId,
+            },
+          });
+
+          console.log(`      ✅ Township created: ${township.name}`);
+        }
+      }
+    }
+  }
+
+  console.log('✅ All location data created successfully.');
+}
+
 async function createOrgUserRole(organizationId: number, superAdmin: User, allPermissions: Permission[]): Promise<Role> {
   const userPermissionStrings = [
     'USER__VIEW_SELF',
@@ -227,6 +384,7 @@ async function createOrgAccessKey(organizationId: number, superAdmin: User, allP
 async function main() {
   const superAdmin = await createSuperAdmin();
   const organization = await createOrganization(superAdmin);
+  await createLocationData(organization.id);
   const allPermissions = await createOrganizationPermissions(organization.id, superAdmin);
   const orgAdminRole = await createOrgAdminRole(organization.id, superAdmin, allPermissions);
   const orgAdmin = await createOrgAdmin(organization.id, superAdmin, orgAdminRole);
