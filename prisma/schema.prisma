@@ -279,7 +279,7 @@ model Profile {
   otherContact3Type     String?
   otherContact3         String?
 
-  address Address[]
+  addresses Address[]
 
   relationships Relationship[] @relation("ProfileRelationship")
   relatedTo     Relationship[] @relation("ProfileRelated")

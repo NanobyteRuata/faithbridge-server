@@ -6,6 +6,8 @@ import {
   IsString,
   IsNumber,
   IsBoolean,
+  ValidateNested,
+  IsArray,
 } from 'class-validator';
 import { CreateAddressDto } from 'src/features/address/dto/requests/address/create-address.dto';
 
@@ -101,4 +103,14 @@ export class CreateProfileDto {
   @IsOptional()
   @IsString()
   otherContact3?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProfileAddressDto)
+  addresses?: CreateProfileAddressDto[];
+}
+
+export class CreateProfileAddressDto extends CreateAddressDto {
+  // No additional fields needed for create
 }

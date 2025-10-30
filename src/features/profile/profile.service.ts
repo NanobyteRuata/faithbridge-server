@@ -30,18 +30,48 @@ export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createProfileDto: CreateProfileDto, userId: number, organizationId?: number) {
-    return this.prisma.profile.create({
-      data: {
-        ...createProfileDto,
-        createdById: userId,
-        updatedById: userId,
-        organizationId,
-      },
-      include: {
-        status: true,
-        membership: true,
-        ...addressInclude,
-      },
+    const { addresses, ...profileData } = createProfileDto;
+
+    return this.prisma.$transaction(async (tx) => {
+      // Create the profile first
+      const profile = await tx.profile.create({
+        data: {
+          ...profileData,
+          createdById: userId,
+          updatedById: userId,
+          organizationId,
+        },
+      });
+
+      // Create addresses if provided
+      if (addresses && addresses.length > 0) {
+        const createdAddresses = await tx.address.createManyAndReturn({
+          data: addresses.map((addr) => ({
+            ...addr,
+            organizationId: organizationId!,
+          })),
+        });
+
+        // Connect addresses to profile
+        await tx.profile.update({
+          where: { id: profile.id },
+          data: {
+            addresses: {
+              connect: createdAddresses.map((addr) => ({ id: addr.id })),
+            },
+          },
+        });
+      }
+
+      // Return the complete profile with relations
+      return tx.profile.findUnique({
+        where: { id: profile.id },
+        include: {
+          status: true,
+          membership: true,
+          ...addressInclude,
+        },
+      });
     });
   }
 
@@ -99,17 +129,87 @@ export class ProfileService {
   }
 
   async update(id: number, updateProfileDto: UpdateProfileDto, userId: number, organizationId?: number) {
-    return this.prisma.profile.update({
-      where: { id, organizationId },
-      data: {
-        ...updateProfileDto,
+    const { addresses, ...profileData } = updateProfileDto;
+
+    return this.prisma.$transaction(async (tx) => {
+      // Update profile data
+      await tx.profile.update({
+        where: { id, organizationId },
+        data: {
+          ...profileData,
           updatedById: userId,
-      },
-      include: {
-        status: true,
-        membership: true,
-        ...addressInclude,
-      },
+        },
+      });
+
+      // Handle addresses if provided
+      if (addresses !== undefined) {
+        // Get existing addresses for this profile
+        const existingAddresses = await tx.address.findMany({
+          where: { profiles: { some: { id } } },
+          select: { id: true },
+        });
+
+        const incomingIds = addresses.filter((addr) => addr.id).map((addr) => addr.id!);
+        const existingIds = existingAddresses.map((addr) => addr.id);
+
+        // Delete addresses not in the incoming array
+        const toDeleteIds = existingIds.filter((existingId) => !incomingIds.includes(existingId));
+        if (toDeleteIds.length > 0) {
+          // Disconnect from profile first, then delete
+          await tx.profile.update({
+            where: { id },
+            data: {
+              addresses: {
+                disconnect: toDeleteIds.map((addrId) => ({ id: addrId })),
+              },
+            },
+          });
+          await tx.address.deleteMany({
+            where: { id: { in: toDeleteIds } },
+          });
+        }
+
+        // Update existing addresses
+        const toUpdate = addresses.filter((addr) => addr.id);
+        for (const addr of toUpdate) {
+          const { id: addrId, ...addrData } = addr;
+          await tx.address.update({
+            where: { id: addrId },
+            data: addrData,
+          });
+        }
+
+        // Create new addresses
+        const toCreate = addresses.filter((addr) => !addr.id);
+        if (toCreate.length > 0) {
+          const createdAddresses = await tx.address.createManyAndReturn({
+            data: toCreate.map((addr) => ({
+              ...addr,
+              organizationId: organizationId!,
+            })),
+          });
+
+          // Connect new addresses to profile
+          await tx.profile.update({
+            where: { id },
+            data: {
+              addresses: {
+                connect: createdAddresses.map((addr) => ({ id: addr.id })),
+              },
+            },
+          });
+        }
+      }
+
+      // Return the complete updated profile
+      return tx.profile.findUnique({
+        where: { id },
+        include: {
+          status: true,
+          membership: true,
+          ...addressInclude,
+        },
+      });
     });
   }
 
@@ -119,8 +219,8 @@ export class ProfileService {
     return this.prisma.profile.delete({ where: { id } });
   }
 
-  private filterPrivateFields(profile: Profile & { address?: Address[] }) {
-    const filtered: Partial<Profile & { address?: Address[] }> = { ...profile };
+  private filterPrivateFields(profile: Profile & { addresses?: Address[] }) {
+    const filtered: Partial<Profile & { addresses?: Address[] }> = { ...profile };
 
     if (!profile.isPersonalEmailPublic) delete filtered.personalEmail;
     if (!profile.isWorkEmailPublic) delete filtered.workEmail;
@@ -139,8 +239,8 @@ export class ProfileService {
       delete filtered.otherContact3Type;
     }
 
-    if (profile.address && profile.address.length > 0) {
-      filtered.address = profile.address.filter((address) => address.isPublic);
+    if (profile.addresses && profile.addresses.length > 0) {
+      filtered.addresses = profile.addresses.filter((address) => address.isPublic);
     }
 
     return filtered;
