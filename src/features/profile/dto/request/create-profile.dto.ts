@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
   IsNumber,
-  ValidateNested,
+  IsBoolean,
 } from 'class-validator';
 import { CreateAddressDto } from 'src/features/address/dto/requests/address/create-address.dto';
 
@@ -30,24 +30,45 @@ export class CreateProfileDto {
   @IsNumber()
   membershipId?: number;
 
+  @IsOptional()
   @IsNumber()
   statusId: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isPersonalEmailPublic?: boolean;
 
   @IsOptional()
   @IsEmail()
   personalEmail?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isWorkEmailPublic?: boolean;
+
+  @IsOptional()
   @IsEmail()
   workEmail?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPersonalPhonePublic?: boolean;
 
   @IsOptional()
   @IsString()
   personalPhone?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isWorkPhonePublic?: boolean;
+
+  @IsOptional()
   @IsString()
   workPhone?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isOtherContact1Public?: boolean;
 
   @IsOptional()
   @IsString()
@@ -58,6 +79,10 @@ export class CreateProfileDto {
   otherContact1?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isOtherContact2Public?: boolean;
+
+  @IsOptional()
   @IsString()
   otherContact2Type?: string;
 
@@ -66,21 +91,14 @@ export class CreateProfileDto {
   otherContact2?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isOtherContact3Public?: boolean;
+
+  @IsOptional()
   @IsString()
   otherContact3Type?: string;
 
   @IsOptional()
   @IsString()
   otherContact3?: string;
-
-  @IsOptional()
-  @Type(() => CreateOrUpdateProfileAddressDto)
-  @ValidateNested({ each: true })
-  addresses?: CreateOrUpdateProfileAddressDto[];
-}
-
-export class CreateOrUpdateProfileAddressDto extends CreateAddressDto {
-  @IsOptional()
-  @IsNumber()
-  id?: number;
 }

@@ -3,7 +3,7 @@ import { CreateProfileDto } from './dto/request/create-profile.dto';
 import { UpdateProfileDto } from './dto/request/update-profile.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { GetProfilesDto } from './dto/query/get-profiles.dto';
-import { Prisma } from '@prisma/client';
+import { Address, Prisma, Profile } from '@prisma/client';
 
 const addressInclude = {
   address: {
@@ -30,22 +30,12 @@ export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createProfileDto: CreateProfileDto, userId: number, organizationId?: number) {
-    const { addresses, ...profileData } = createProfileDto;
-
     return this.prisma.profile.create({
       data: {
-        ...profileData,
+        ...createProfileDto,
         createdById: userId,
         updatedById: userId,
         organizationId,
-        ...(addresses && addresses.length > 0 && {
-          address: {
-            create: addresses.map((addr) => ({
-              ...addr,
-              organizationId: organizationId!,
-            })),
-          },
-        }),
       },
       include: {
         status: true,
@@ -67,10 +57,10 @@ export class ProfileService {
         organizationId,
         ...(statusIds ? { statusId: { in: statusIds } } : { status: { isActiveStatus: true } }),
         ...(membershipIds ? { membershipId: { in: membershipIds } } : { membership: { isActiveMembership: true } }),
-        ...(townshipIds ? { townshipId: { in: townshipIds } } : {}),
-        ...(!townshipIds && cityIds ? { cityId: { in: cityIds } } : {}),
-        ...(!townshipIds && !cityIds && stateIds ? { stateId: { in: stateIds } } : {}),
-        ...(!townshipIds && !cityIds && !stateIds && countryIds ? { countryId: { in: countryIds } } : {}),
+        ...(townshipIds ? { address: { every: { townshipId: { in: townshipIds } } } } : {}),
+        ...(!townshipIds && cityIds ? { address: { every: { township: { cityId: { in: cityIds } } } } } : {}),
+        ...(!townshipIds && !cityIds && stateIds ? { address: { every: { township: { city: { stateId: { in: stateIds } } } } } } : {}),
+        ...(!townshipIds && !cityIds && !stateIds && countryIds ? { address: { every: { township: { city: { state: { countryId: { in: countryIds } } } } } } } : {}),
       },
       include: {
         status: true,
@@ -84,8 +74,10 @@ export class ProfileService {
       this.prisma.profile.count({ where: args.where }),
     ]);
 
+    const filteredProfiles = profiles.map((profile) => this.filterPrivateFields(profile));
+
     return {
-      data: profiles,
+      data: filteredProfiles,
       meta: {
         page: skip,
         limit,
@@ -107,81 +99,17 @@ export class ProfileService {
   }
 
   async update(id: number, updateProfileDto: UpdateProfileDto, userId: number, organizationId?: number) {
-    const { addresses, ...profileData } = updateProfileDto;
-
-    return this.prisma.$transaction(async (tx) => {
-      // If addresses are provided, handle create/update/delete
-      if (addresses !== undefined) {
-        const existingAddresses = await tx.address.findMany({
-          where: { profiles: { some: { id } } },
-          select: { id: true },
-        });
-
-        const incomingIds = addresses.filter((addr) => addr.id).map((addr) => addr.id!);
-        const toDelete = existingAddresses.filter((addr) => !incomingIds.includes(addr.id));
-
-        // Delete addresses not in the incoming array
-        if (toDelete.length > 0) {
-          await tx.address.deleteMany({
-            where: { id: { in: toDelete.map((addr) => addr.id) } },
-          });
-        }
-
-        // Update existing addresses
-        const toUpdate = addresses.filter((addr) => addr.id);
-        for (const addr of toUpdate) {
-          const { id: addrId, ...addrData } = addr;
-          await tx.address.update({
-            where: { id: addrId },
-            data: addrData,
-          });
-        }
-
-        // Create new addresses
-        const toCreate = addresses.filter((addr) => !addr.id);
-        if (toCreate.length > 0) {
-          await tx.address.createMany({
-            data: toCreate.map((addr) => ({
-              ...addr,
-              organizationId: organizationId!,
-            })),
-          });
-
-          // Connect new addresses to profile
-          const newAddresses = await tx.address.findMany({
-            where: {
-              organizationId,
-              id: { notIn: existingAddresses.map((a) => a.id) },
-              profiles: { none: {} },
-            },
-            orderBy: { id: 'desc' },
-            take: toCreate.length,
-          });
-
-          await tx.profile.update({
-            where: { id },
-            data: {
-              address: {
-                connect: newAddresses.map((addr) => ({ id: addr.id })),
-              },
-            },
-          });
-        }
-      }
-
-      // Update profile data
-      return tx.profile.update({
-        where: { id, organizationId },
-        data: {
-          ...profileData,
+    return this.prisma.profile.update({
+      where: { id, organizationId },
+      data: {
+        ...updateProfileDto,
           updatedById: userId,
-        },
-        include: {
-          status: true,
-          membership: true,
-          ...addressInclude,
-        },
-      });
+      },
+      include: {
+        status: true,
+        membership: true,
+        ...addressInclude,
+      },
     });
   }
 
@@ -189,5 +117,32 @@ export class ProfileService {
     // TODO: use userId for activity logging later
     console.log(userId);
     return this.prisma.profile.delete({ where: { id } });
+  }
+
+  private filterPrivateFields(profile: Profile & { address?: Address[] }) {
+    const filtered: Partial<Profile & { address?: Address[] }> = { ...profile };
+
+    if (!profile.isPersonalEmailPublic) delete filtered.personalEmail;
+    if (!profile.isWorkEmailPublic) delete filtered.workEmail;
+    if (!profile.isPersonalPhonePublic) delete filtered.personalPhone;
+    if (!profile.isHomePhonePublic) delete filtered.homePhone;
+    if (!profile.isOtherContact1Public) {
+      delete filtered.otherContact1;
+      delete filtered.otherContact1Type;
+    }
+    if (!profile.isOtherContact2Public) {
+      delete filtered.otherContact2;
+      delete filtered.otherContact2Type;
+    }
+    if (!profile.isOtherContact3Public) {
+      delete filtered.otherContact3;
+      delete filtered.otherContact3Type;
+    }
+
+    if (profile.address && profile.address.length > 0) {
+      filtered.address = profile.address.filter((address) => address.isPublic);
+    }
+
+    return filtered;
   }
 }

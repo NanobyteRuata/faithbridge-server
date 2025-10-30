@@ -255,18 +255,29 @@ model Profile {
 
   groupMemberships ProfileGroupMember[]
 
-  personalEmail String?
-  workEmail     String?
+  isPersonalEmailPublic Boolean @default(true)
+  personalEmail         String?
 
-  personalPhone String?
-  homePhone     String?
+  isWorkEmailPublic Boolean @default(true)
+  workEmail         String?
 
-  otherContact1Type String?
-  otherContact1     String?
-  otherContact2Type String?
-  otherContact2     String?
-  otherContact3Type String?
-  otherContact3     String?
+  isPersonalPhonePublic Boolean @default(true)
+  personalPhone         String?
+
+  isHomePhonePublic Boolean @default(true)
+  homePhone         String?
+
+  isOtherContact1Public Boolean @default(true)
+  otherContact1Type     String?
+  otherContact1         String?
+
+  isOtherContact2Public Boolean @default(true)
+  otherContact2Type     String?
+  otherContact2         String?
+
+  isOtherContact3Public Boolean @default(true)
+  otherContact3Type     String?
+  otherContact3         String?
 
   address Address[]
 
@@ -317,6 +328,7 @@ model Address {
 
   profiles Profile[]
 
+  isPublic   Boolean   @default(true)
   room       String?
   building   String?
   street     String

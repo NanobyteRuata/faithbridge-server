@@ -58,7 +58,6 @@ export class StatusController {
 
   @Get('dropdown')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.STATUS__VIEW)
   findAllDropdown(@Req() { user }: HybridAuthRequest) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');

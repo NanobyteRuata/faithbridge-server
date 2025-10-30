@@ -58,7 +58,6 @@ export class MembershipController {
 
   @Get('dropdown')
   @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.MEMBERSHIP__VIEW)
   findAllDropdown(@Req() { user }: HybridAuthRequest) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');

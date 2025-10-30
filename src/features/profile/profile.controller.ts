@@ -36,13 +36,13 @@ export class ProfileController {
   }
 
   @Get()
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @UseGuards(HybridAuthGuard)
   findAll(@Query() query: GetProfilesDto, @Req() req: JwtAuthRequest) {
     return this.profileService.findAll(query, req.user.organizationId);
   }
 
   @Get(':id')
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @UseGuards(HybridAuthGuard)
   findOne(@Param('id') id: string, @Req() req: JwtAuthRequest) {
     return this.profileService.findOne(+id, req.user.organizationId);
   }

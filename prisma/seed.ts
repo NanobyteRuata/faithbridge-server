@@ -1,7 +1,7 @@
 import { AccessCode, Organization, Permission, PrismaClient, Role, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
-import { PERMISSION_DESCRIPTION, PERMISSIONS } from '../src/shared/constants/permissions.constant';
+import { PERMISSION_DESCRIPTION } from '../src/shared/constants/permissions.constant';
 
 dotenv.config();
 const prisma = new PrismaClient();
