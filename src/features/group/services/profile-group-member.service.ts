@@ -14,7 +14,7 @@ export class ProfileGroupMemberService {
     userId: number,
     organizationId: number,
   ) {
-    return this.prisma.profileGroupMember.create({
+    return this.prisma.groupProfile.create({
       data: {
         ...createProfileGroupMemberDto,
         organizationId,
@@ -33,7 +33,7 @@ export class ProfileGroupMemberService {
     profileId,
     groupRoleId,
   }: GetProfileGroupMembersDto) {
-    const args: Prisma.ProfileGroupMemberFindManyArgs = {
+    const args: Prisma.GroupProfileFindManyArgs = {
       skip,
       take: limit,
       where: {
@@ -61,12 +61,12 @@ export class ProfileGroupMemberService {
           select: { id: true, code: true, name: true },
         },
       },
-      orderBy: { joinedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
     };
 
     const [members, total] = await this.prisma.$transaction([
-      this.prisma.profileGroupMember.findMany(args),
-      this.prisma.profileGroupMember.count({ where: args.where }),
+      this.prisma.groupProfile.findMany(args),
+      this.prisma.groupProfile.count({ where: args.where }),
     ]);
 
     return {
@@ -81,7 +81,7 @@ export class ProfileGroupMemberService {
   }
 
   async findOne(id: number, userOrgId?: number) {
-    const member = await this.prisma.profileGroupMember.findUnique({
+    const member = await this.prisma.groupProfile.findUnique({
       where: { id },
       include: {
         profile: {
@@ -111,7 +111,7 @@ export class ProfileGroupMemberService {
   ) {
     await this.findOne(id, userOrgId);
 
-    return this.prisma.profileGroupMember.update({
+    return this.prisma.groupProfile.update({
       where: { id },
       data: { ...updateProfileGroupMemberDto, updatedById: userId },
     });
@@ -121,6 +121,6 @@ export class ProfileGroupMemberService {
     await this.findOne(id, userOrgId);
 
     console.log(userId);
-    return this.prisma.profileGroupMember.delete({ where: { id } });
+    return this.prisma.groupProfile.delete({ where: { id } });
   }
 }

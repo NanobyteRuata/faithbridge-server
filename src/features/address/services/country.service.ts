@@ -9,10 +9,21 @@ import { Prisma } from '@prisma/client';
 export class CountryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createCountryDto: CreateCountryDto, organizationId: number) {
-    return this.prisma.country.create({
+  async create(createCountryDto: CreateCountryDto, organizationId: number) {
+    const country = await this.prisma.country.create({
       data: { ...createCountryDto, organizationId },
     });
+
+    // Create default unknown state for the country
+    await this.prisma.state.create({
+      data: {
+        name: 'Unknown',
+        organizationId,
+        countryId: country.id,
+      },
+    });
+
+    return country;
   }
 
   async findAll({ skip, limit, search, organizationId }: GetCountriesDto) {

@@ -9,10 +9,21 @@ import { Prisma } from '@prisma/client';
 export class CityService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createCityDto: CreateCityDto, organizationId: number) {
-    return this.prisma.city.create({
+  async create(createCityDto: CreateCityDto, organizationId: number) {
+    const city = await this.prisma.city.create({
       data: { ...createCityDto, organizationId },
     });
+
+    // Create default unknown township for the city
+    await this.prisma.township.create({
+      data: {
+        name: 'Unknown',
+        organizationId,
+        cityId: city.id,
+      },
+    });
+
+    return city;
   }
 
   async findAll({ skip, limit, search, organizationId, stateId }: GetCitiesDto) {

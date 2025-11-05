@@ -38,8 +38,8 @@ model Organization {
   accessCodes       AccessCode[]
   groupTypes        GroupType[]
   groupRoles        GroupRole[]
-  groupMemberships  ProfileGroupMember[]
-  groupProfiles     ProfileGroup[]
+  groupMemberships  GroupProfile[]
+  groups            Group[]
 
   createdById Int?
   createdBy   User? @relation("OrganizationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -135,11 +135,11 @@ model User {
   createdGroupRoles GroupRole[] @relation("GroupRoleCreatedBy")
   updatedGroupRoles GroupRole[] @relation("GroupRoleUpdatedBy")
 
-  createdGroupMemberships ProfileGroupMember[] @relation("ProfileGroupMemberCreatedBy")
-  updatedGroupMemberships ProfileGroupMember[] @relation("ProfileGroupMemberUpdatedBy")
+  createdGroupMemberships GroupProfile[] @relation("GroupProfileCreatedBy")
+  updatedGroupMemberships GroupProfile[] @relation("GroupProfileUpdatedBy")
 
-  createdGroupProfiles ProfileGroup[] @relation("ProfileGroupCreatedBy")
-  updatedGroupProfiles ProfileGroup[] @relation("ProfileGroupUpdatedBy")
+  createdGroups Group[] @relation("GroupCreatedBy")
+  updatedGroups Group[] @relation("GroupUpdatedBy")
 
   @@unique([email, organizationId])
   @@unique([phone, organizationId])
@@ -253,7 +253,7 @@ model Profile {
   membershipId Int?
   membership   Membership? @relation(fields: [membershipId], references: [id], onDelete: Restrict)
 
-  groupMemberships ProfileGroupMember[]
+  groupMemberships GroupProfile[]
 
   isPersonalEmailPublic Boolean @default(true)
   personalEmail         String?
@@ -510,7 +510,7 @@ model GroupType {
   name        String
   description String?
 
-  groups ProfileGroup[]
+  groups Group[]
   roles  GroupRole[]
 
   createdById Int?
@@ -536,7 +536,7 @@ model GroupRole {
   name        String
   description String?
 
-  members ProfileGroupMember[]
+  members GroupProfile[]
 
   createdById Int?
   createdBy   User?    @relation("GroupRoleCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -550,7 +550,7 @@ model GroupRole {
   @@index([groupTypeId])
 }
 
-model ProfileGroup {
+model Group {
   id             Int          @id @default(autoincrement())
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -561,21 +561,21 @@ model ProfileGroup {
   groupTypeId Int
   groupType   GroupType @relation(fields: [groupTypeId], references: [id], onDelete: Restrict)
 
-  members ProfileGroupMember[]
+  members GroupProfile[]
 
   createdById Int?
-  createdBy   User?    @relation("ProfileGroupCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   User?    @relation("GroupCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
 
   updatedById Int?
-  updatedBy   User?    @relation("ProfileGroupUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   User?    @relation("GroupUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
 
   @@unique([name, organizationId])
   @@index([groupTypeId])
 }
 
-model ProfileGroupMember {
+model GroupProfile {
   id             Int          @id @default(autoincrement())
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -584,20 +584,17 @@ model ProfileGroupMember {
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   groupId Int
-  group   ProfileGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   groupRoleId Int?
   groupRole   GroupRole? @relation(fields: [groupRoleId], references: [id], onDelete: SetNull)
 
-  joinedAt DateTime  @default(now())
-  leftAt   DateTime?
-
   createdById Int?
-  createdBy   User?    @relation("ProfileGroupMemberCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   User?    @relation("GroupProfileCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
 
   updatedById Int?
-  updatedBy   User?    @relation("ProfileGroupMemberUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   User?    @relation("GroupProfileUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
 
   @@unique([profileId, groupId])

@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class CreateProfileGroupDto {
+export class CreateGroupDto {
   @IsNumber()
   @IsOptional()
   organizationId?: number;
