@@ -331,7 +331,7 @@ async function createOrgUser(
   }
 
   const profile = await prisma.profile.create({
-    data: { title: 'Mr.', name: 'Org Admin', organizationId },
+    data: { title: 'Mr.', name: 'Org User', organizationId },
   });
   const hashedPassword = await bcrypt.hash(password, 10);
 
