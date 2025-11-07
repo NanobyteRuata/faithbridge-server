@@ -44,9 +44,8 @@ export class TownshipController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.LOCATION_DATA__VIEW)
-  findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetTownshipsDto) {
+  @UseGuards(HybridAuthGuard)
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetTownshipsDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
     }
@@ -68,9 +67,8 @@ export class TownshipController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.LOCATION_DATA__VIEW)
-  findOne(@Req() { user }: JwtAuthRequest, @Param('id', ParseIntPipe) id: number) {
+  @UseGuards(HybridAuthGuard)
+  findOne(@Req() { user }: HybridAuthRequest, @Param('id', ParseIntPipe) id: number) {
     return this.townshipService.findOne(id, user.organizationId);
   }
 

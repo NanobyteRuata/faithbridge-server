@@ -1,9 +1,13 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   Ip,
+  Param,
+  Patch,
   Post,
+  Query,
   Req,
   Request,
   UnauthorizedException,
@@ -21,26 +25,65 @@ import {
   LocalAuthRequest,
   JwtRefreshRequest,
   JwtAuthRequest,
+  HybridAuthRequest,
 } from './interface/requests.interface';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { LogoutDto } from './dto/request/logout.dto';
 import { ResetPasswordDto } from './dto/request/reset-password.dto';
 import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
+import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { UpdateUserDto } from './dto/request/update-user.dto';
+import { GetUsersDto } from './dto/query/get-users.dto';
+import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get()
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.USER__VIEW)
+  getAll(@Req() { user }: HybridAuthRequest, @Query() query: GetUsersDto) {
+    return this.userService.findAll(query, user.organizationId);
+  }
+
+  @Get('self')
+  @UseGuards(JwtAuthGuard)
+  getSelf(@Req() { user }: JwtAuthRequest) {
+    return this.userService.findUniqueOrgUser({ userFilters: { id: user.sub } });
+  }
+
+  @Get(':id')
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.USER__VIEW)
+  getOne(@Param('id') id: number) {
+    return this.userService.findUniqueOrgUser({ userFilters: { id } });
+  }
+
   @Post('register')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.USER__EDIT)
   register(@Req() { user }: JwtAuthRequest, @Body() registerDto: RegisterDto) {
     return this.userService.register(
       registerDto,
       user.sub,
       user.organizationId,
     );
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.USER__EDIT)
+  update(@Req() { user }: JwtAuthRequest, @Body() updateDto: UpdateUserDto, @Param('id') id: number) {
+    return this.userService.updateUser(id, updateDto, user.organizationId);
+  }
+
+  @Patch('self')
+  @UseGuards(JwtAuthGuard)
+  updateSelf(@Req() { user }: JwtAuthRequest, @Body() updateDto: UpdateUserDto) {
+    delete updateDto.id;
+    return this.userService.updateUser(user.sub, updateDto);
   }
 
   @UseGuards(LocalAuthGuard)

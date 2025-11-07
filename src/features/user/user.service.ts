@@ -17,6 +17,8 @@ import { LoginResponseDto } from './dto/response/login-response.dto';
 import { randomInt } from 'crypto';
 import { EmailService } from 'src/shared/services/email.service';
 import { RegisterResponseDto } from './dto/response/register-response.dto';
+import { UpdateUserDto } from './dto/request/update-user.dto';
+import { GetUsersDto } from './dto/query/get-users.dto';
 
 interface FindUniqieOrgUserParams {
   userFilters: FindUniqieOrgUserUserFilterParams;
@@ -95,6 +97,10 @@ export class UserService {
     const user = await this.findUniqueOrgUser(filters, include);
     if (!user) return null;
 
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+
     return await this.prisma.user.update({
       where: { id: user.id },
       data,
@@ -128,6 +134,37 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async findAll({ page, skip, limit, search }: GetUsersDto, organizationId?: number) {
+      const args: Prisma.UserFindManyArgs = {
+          skip,
+          take: limit,
+          where: { organizationId },
+          include: {
+            role: true,
+            profile: true,
+          },
+        };
+    
+        const [users, total] = await this.prisma.$transaction([
+          this.prisma.user.findMany(args),
+          this.prisma.user.count({ where: args.where }),
+        ]);
+    
+        const filteredUsers = users.map((user) =>
+          this.filterSensitiveData(user),
+        );
+    
+        return {
+          data: filteredUsers,
+          meta: {
+            page,
+            limit,
+            total,
+          },
+          success: true,
+        };
   }
 
   async login(
@@ -200,6 +237,17 @@ export class UserService {
     });
 
     return new RegisterResponseDto(user);
+  }
+
+  async updateUser(
+    userId: number,
+    updateUserDto: UpdateUserDto,
+    organizationId?: number,
+  ) {
+    return this.updateOrgUser(
+      { userFilters: { id: userId }, organizationFilters: { organizationId } },
+      updateUserDto,
+    );
   }
 
   async refreshTokens(
@@ -452,5 +500,10 @@ export class UserService {
       default:
         return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     }
+  }
+
+  private filterSensitiveData(user: User): Partial<User> {
+    const { password, resetCode, resetCodeExpiresAt, ...rest } = user;
+    return rest;
   }
 }

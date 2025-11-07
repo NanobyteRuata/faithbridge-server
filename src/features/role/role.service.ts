@@ -18,6 +18,7 @@ export class RoleService {
   async createRole(
     createRoleDto: CreateRoleDto,
     userId: number,
+    organizationId?: number,
   ): Promise<Role> {
     const { name, permissions } = createRoleDto;
     const role = await this.prisma.role.create({
@@ -26,6 +27,7 @@ export class RoleService {
         permissions: {
           connect: permissions.map((id) => ({ id })),
         },
+        ...(organizationId && { organizationId }),
         createdById: userId,
         updatedById: userId,
       },
@@ -42,11 +44,13 @@ export class RoleService {
     limit,
     skip,
     search,
+    type,
   }: GetRolesDto): Promise<PaginatedDto<Role>> {
     const args: Prisma.RoleFindManyArgs = {
       skip,
       take: limit,
       where: {
+        ...(type && { isUserRole: type === 'USER' }),
         name: {
           contains: search?.trim(),
           mode: 'insensitive',
@@ -73,9 +77,9 @@ export class RoleService {
     };
   }
 
-  async findAllDropdown(organizationId: number) {
+  async findAllDropdown(organizationId: number, type?: 'USER' | 'ACCESS_CODE') {
     return await this.prisma.role.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(type && { isUserRole: type === 'USER' }) },
       select: { id: true, name: true },
     });
   }
@@ -93,11 +97,12 @@ export class RoleService {
 
   async updateRole(
     id: number,
-    { name, permissions }: UpdateRoleDto,
+    { name, permissions, isUserRole }: UpdateRoleDto,
     userId: number,
   ): Promise<Role> {
     const data: Prisma.RoleUpdateInput = {
       name,
+      isUserRole,
       updatedBy: {
         connect: { id: userId },
       },

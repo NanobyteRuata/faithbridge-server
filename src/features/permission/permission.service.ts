@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { BulkCreatePermissionsDto, EachPermissionDto } from './dto/request/bulk-create-permissions.dto';
+import {
+  BulkCreatePermissionsDto,
+  EachPermissionDto,
+} from './dto/request/bulk-create-permissions.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
@@ -19,20 +22,14 @@ export class PermissionService {
     return this.prisma.permission.createManyAndReturn({ data });
   }
 
-  async findAll(
-    organizationId?: number,
-  ) {
-    const permissions = await this.prisma.permission.findMany({ where: { organizationId } });
+  findViewPermissions(organizationId?: number) {
+    return this.prisma.permission.findMany({
+      where: { permission: { endsWith: '__VIEW' }, organizationId },
+    });
+  }
 
-    return {
-      data: permissions,
-      meta: {
-        page: 1,
-        limit: permissions.length,
-        total: permissions.length,
-      },
-      success: true,
-    };
+  findAll(organizationId?: number) {
+    return this.prisma.permission.findMany({ where: { organizationId } });
   }
 
   findOne(id: number, organizationId?: number) {

@@ -3,9 +3,9 @@ import { CreateProfileDto } from './dto/request/create-profile.dto';
 import { UpdateProfileDto } from './dto/request/update-profile.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { GetProfilesDto } from './dto/query/get-profiles.dto';
-import { Address, Prisma, Profile } from '@prisma/client';
+import { Address, Prisma, Profile, User } from '@prisma/client';
 
-const addressInclude: Prisma.ProfileInclude = {
+export const addressInclude: Prisma.ProfileInclude = {
   addresses: {
     include: {
       township: {
@@ -107,6 +107,7 @@ export class ProfileService {
       cityIds,
       stateIds,
       countryIds,
+      isUser,
     }: GetProfilesDto,
     organizationId?: number,
   ) {
@@ -115,15 +116,39 @@ export class ProfileService {
       take: limit,
       where: {
         ...(search && {
-          name: {
-            contains: search?.trim(),
-            mode: 'insensitive',
-          },
+          OR: [
+            {
+              title: {
+                contains: search?.trim(),
+                mode: 'insensitive',
+              },
+            },
+            {
+              name: {
+                contains: search?.trim(),
+                mode: 'insensitive',
+              },
+            },
+            {
+              lastName: {
+                contains: search?.trim(),
+                mode: 'insensitive',
+              },
+            },
+            {
+              nickName: {
+                contains: search?.trim(),
+                mode: 'insensitive',
+              },
+            },
+          ],
         }),
         organization: {
           id: organizationId,
         },
-        ...(statusIds && { status: { isActiveStatus: true, id: { in: statusIds } } }),
+        ...(statusIds && {
+          status: { isActiveStatus: true, id: { in: statusIds } },
+        }),
         ...(membershipIds && {
           membership: { isActiveMembership: true, id: { in: membershipIds } },
         }),
@@ -153,10 +178,14 @@ export class ProfileService {
               },
             },
           }),
+        ...(isUser != null && {
+          user: isUser ? { isNot: null } : { is: null },
+        }),
       },
       include: {
         status: true,
         membership: true,
+        user: true,
         ...addressInclude,
       },
     };
@@ -166,9 +195,13 @@ export class ProfileService {
       this.prisma.profile.count({ where: args.where }),
     ]);
 
-    const filteredProfiles = profiles.map((profile) =>
-      this.filterPrivateFields(profile),
-    );
+    const filteredProfiles = profiles.map((profile) => {
+      const userId = (profile as Profile & { user?: User }).user?.id;
+      return {
+        ...this.filterPrivateFields(profile),
+        userId,
+      };
+    });
 
     return {
       data: filteredProfiles,
@@ -181,15 +214,22 @@ export class ProfileService {
     };
   }
 
-  findOne(id: number, organizationId?: number) {
-    return this.prisma.profile.findUnique({
+  async findOne(id: number, organizationId?: number) {
+    const profile = await this.prisma.profile.findUnique({
       where: { id, organizationId },
       include: {
         status: true,
         membership: true,
+        user: true,
         ...addressInclude,
       },
     });
+
+    const userId = (profile as Profile & { user?: User }).user?.id;
+    return {
+      ...this.filterPrivateFields(profile as Profile),
+      userId,
+    };
   }
 
   async update(

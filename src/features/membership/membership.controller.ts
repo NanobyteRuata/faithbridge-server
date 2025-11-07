@@ -47,8 +47,7 @@ export class MembershipController {
   }
 
   @Get()
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.MEMBERSHIP__VIEW)
+  @UseGuards(HybridAuthGuard)
   findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetMembershipsDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
@@ -57,7 +56,7 @@ export class MembershipController {
   }
 
   @Get('dropdown')
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @UseGuards(HybridAuthGuard)
   findAllDropdown(@Req() { user }: HybridAuthRequest) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
@@ -66,8 +65,7 @@ export class MembershipController {
   }
 
   @Get(':id')
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.MEMBERSHIP__VIEW)
+  @UseGuards(HybridAuthGuard)
   findOne(@Req() { user }: HybridAuthRequest, @Param('id', ParseIntPipe) id: number) {
     return this.membershipService.findOne(id, user.organizationId);
   }

@@ -47,8 +47,7 @@ export class ProfileGroupMemberController {
   }
 
   @Get()
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.GROUP__VIEW)
+  @UseGuards(HybridAuthGuard)
   findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetProfileGroupMembersDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
@@ -57,8 +56,7 @@ export class ProfileGroupMemberController {
   }
 
   @Get(':id')
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.GROUP__VIEW)
+  @UseGuards(HybridAuthGuard)
   findOne(@Req() { user }: HybridAuthRequest, @Param('id', ParseIntPipe) id: number) {
     return this.profileGroupMemberService.findOne(id, user.organizationId);
   }

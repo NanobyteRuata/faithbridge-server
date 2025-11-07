@@ -47,8 +47,7 @@ export class GroupRoleController {
   }
 
   @Get()
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.GROUP__VIEW)
+  @UseGuards(HybridAuthGuard)
   findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetGroupRolesDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
@@ -57,8 +56,7 @@ export class GroupRoleController {
   }
 
   @Get('dropdown')
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.PROFILE__EDIT)
+  @UseGuards(HybridAuthGuard)
   findAllDropdown(@Req() { user }: HybridAuthRequest, @Query() query: GetGroupRolesDto) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
@@ -67,8 +65,7 @@ export class GroupRoleController {
   }
 
   @Get(':id')
-  @UseGuards(HybridAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.GROUP__VIEW)
+  @UseGuards(HybridAuthGuard)
   findOne(@Req() { user }: HybridAuthRequest, @Param('id', ParseIntPipe) id: number) {
     return this.groupRoleService.findOne(id, user.organizationId);
   }

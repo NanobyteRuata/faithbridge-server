@@ -58,7 +58,7 @@ export class OrganizationController {
 
   @Patch('self')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.ORGANIZATION__UPDATE)
+  @Permissions(PERMISSIONS.ORGANIZATION__EDIT)
   updateSelf(
     @Req() { user }: JwtAuthRequest,
     @Body() updateOrganizationDto: UpdateOrganizationDto,

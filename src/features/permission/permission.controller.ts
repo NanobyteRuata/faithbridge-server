@@ -16,7 +16,7 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
-import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { ACCESS_CODE_PERMISSIONS, PERMISSIONS } from 'src/shared/constants/permissions.constant';
 
 @Controller('permission')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -36,6 +36,12 @@ export class PermissionController {
   @Permissions('SUPER-ADMIN')
   constantPermissions() {
     return Object.keys(PERMISSIONS);
+  }
+
+  @Get('view-only')
+  @Permissions(PERMISSIONS.ROLE__EDIT)
+  accessCodePermissions(@Req() { user }: JwtAuthRequest) {
+    return this.permissionService.findViewPermissions(user.organizationId);
   }
 
   @Get()

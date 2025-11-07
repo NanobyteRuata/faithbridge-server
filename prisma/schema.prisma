@@ -177,6 +177,7 @@ model Role {
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   isOwner     Boolean      @default(false)
+  isUserRole  Boolean      @default(true)
   name        String
   permissions Permission[]
   users       User[]
@@ -481,8 +482,8 @@ model AccessCode {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  name       String
-  hashedCode String @unique
+  name String
+  code String
 
   roleId Int
   role   Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
@@ -498,7 +499,7 @@ model AccessCode {
   updatedBy   User?    @relation("AccessCodeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
 
-  @@unique([hashedCode, organizationId])
+  @@unique([code, organizationId])
 }
 
 model GroupType {

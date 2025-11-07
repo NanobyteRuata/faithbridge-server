@@ -21,49 +21,55 @@ import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { JwtAuthRequest } from '../user/interface/requests.interface';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
 @Controller('role')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Get('permissions')
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ROLE__VIEW)
   findAllPermissions() {
     return this.roleService.findAllPermissions();
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ROLE__EDIT)
   createRole(@Req() { user }: JwtAuthRequest, @Body() createRoleDto: CreateRoleDto) {
     if (!user.isSuperAdmin) {
       createRoleDto.isOwner = false;
     }
-    return this.roleService.createRole(createRoleDto, user.sub);
+    return this.roleService.createRole(createRoleDto, user.sub, user.organizationId);
   }
 
   @Get()
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ROLE__VIEW)
   findAllRoles(@Query() query: GetRolesDto) {
     return this.roleService.findAllRoles(query);
   }
 
   @Get('dropdown')
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ROLE__VIEW)
-  findAllDropdown(@Req() { user }: JwtAuthRequest) {
+  findAllDropdown(@Req() { user }: JwtAuthRequest, @Query() { type }: GetRolesDto) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
     }
-    return this.roleService.findAllDropdown(user.organizationId);
+    return this.roleService.findAllDropdown(user.organizationId, type);
   }
 
   @Get(':id')
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ROLE__VIEW)
   findOneRole(@Param('id', ParseIntPipe) id: number) {
     return this.roleService.findOneRole(id);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ROLE__EDIT)
   updateRole(
     @Param('id', ParseIntPipe) id: number,
@@ -77,6 +83,7 @@ export class RoleController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.ROLE__EDIT)
   removeRole(@Param('id', ParseIntPipe) id: number, @Req() { user }: JwtAuthRequest) {
     return this.roleService.removeRole(id, user);

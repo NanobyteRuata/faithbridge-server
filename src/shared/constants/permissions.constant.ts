@@ -1,23 +1,22 @@
 export enum PERMISSION_DESCRIPTION {
-  USER__CREATE = 'Create user',
-  USER__VIEW = 'View any users',
-  USER__VIEW_SELF = 'View self user',
-  USER__UPDATE = 'Update any user details',
-  USER__UPDATE_SELF = 'Update any self user details',
-  USER__DELETE = 'Delete user',
-  PROFILE__EDIT = 'Edit any profiles',
   ORGANIZATION__EDIT = 'Edit the organization details',
-  MEMBERSHIP__VIEW = 'View memberships',
+  ACCESS_CODE__VIEW = 'View access codes',
+  ACCESS_CODE__EDIT = 'Edit access codes',
+  USER__VIEW = 'View any users',
+  USER__EDIT = 'Edit any users',
+  PROFILE__EDIT = 'Edit any profiles',
   MEMBERSHIP__EDIT = 'Edit memberships',
-  STATUS__VIEW = 'View statuses',
   STATUS__EDIT = 'Edit statuses',
   ROLE__VIEW = 'View roles',
   ROLE__EDIT = 'Edit roles',
-  LOCATION_DATA__VIEW = 'View location data',
   LOCATION_DATA__EDIT = 'Edit location data',
-  GROUP__VIEW = 'View groups',
   GROUP__EDIT = 'Edit groups',
 }
+
+export const ACCESS_CODE_PERMISSIONS = Object.entries(PERMISSION_DESCRIPTION).filter(([permission]) => permission.endsWith('__VIEW')).reduce((acc, [permission, description]) => {
+  acc[permission] = description;
+  return acc;
+}, {} as Record<string, string>);
 
 export const PERMISSIONS = Object.keys(PERMISSION_DESCRIPTION).reduce((acc, key) => {
   acc[key] = key;

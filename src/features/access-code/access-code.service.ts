@@ -20,15 +20,13 @@ export class AccessCodeService {
       include: { role: { include: { permissions: true } }, organization: true },
     });
     for (const entity of accessCodeEntities) {
-      const { id, expireDate, hashedCode, role, isActive, organizationId } = entity;
+      const { id, expireDate, code, role, isActive, organizationId } = entity;
 
       const isExpired =
         (expireDate && Date.now() > expireDate.getTime()) ?? false;
       if (isExpired || !isActive) continue;
 
-      // eslint-disable-next-line
-      const isValid = await bcrypt.compare(accessCode, hashedCode);
-      if (isValid) {
+      if (accessCode === code) {
         return {
           id,
           name: entity.name,
@@ -50,23 +48,18 @@ export class AccessCodeService {
     return await this.validate(accessCode, organizationCode);
   }
 
-  async create(createAccessCodeDto: CreateAccessCodeDto, userId: number) {
-    const { code, ...rest } = createAccessCodeDto;
-
-    // eslint-disable-next-line
-    const hashedCode = (await bcrypt.hash(code, 10)) as string;
-
+  async create(createAccessCodeDto: CreateAccessCodeDto, userId: number, organizationId: number) {
     return this.prisma.accessCode.create({
       data: {
-        ...rest,
-        hashedCode,
+        ...createAccessCodeDto,
+        organizationId,
         createdById: userId,
         updatedById: userId,
       },
     });
   }
 
-  async findAll({ skip, limit, search, organizationId }: GetAccessCodesDto) {
+  async findAll({ skip, limit, search }: GetAccessCodesDto, organizationId?: number) {
     const args: Prisma.AccessCodeFindManyArgs = {
       skip,
       take: limit,
@@ -105,28 +98,17 @@ export class AccessCodeService {
     userId: number,
     organizationId?: number,
   ) {
-    const { code, ...restDto } = updateAccessCodeDto;
-
     const updatedData = {
-      ...restDto,
+      ...updateAccessCodeDto,
       updatedById: userId,
     };
-
-    if (code) {
-      // eslint-disable-next-line
-      const newHashedCode = (await bcrypt.hash(code, 10)) as string;
-      updatedData['hashedCode'] = newHashedCode;
-    }
 
     const accessCodeEntity = await this.prisma.accessCode.update({
       where: { id, organizationId },
       data: updatedData,
     });
 
-    // eslint-disable-next-line
-    const { hashedCode, ...restEntity } = accessCodeEntity;
-
-    return restEntity;
+    return accessCodeEntity;
   }
 
   async remove(id: number, userId: number, organizationId?: number) {

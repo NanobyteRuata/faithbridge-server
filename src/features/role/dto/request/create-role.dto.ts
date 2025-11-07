@@ -1,9 +1,13 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateRoleDto {
   @IsBoolean()
+  @IsOptional()
+  isOwner?: boolean;
+
+  @IsBoolean()
   @IsNotEmpty()
-  isOwner: boolean;
+  isUserRole: boolean;
 
   @IsString()
   @IsNotEmpty()

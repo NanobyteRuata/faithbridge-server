@@ -44,9 +44,8 @@ export class StateController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.LOCATION_DATA__VIEW)
-  findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetStatesDto) {
+  @UseGuards(HybridAuthGuard)
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetStatesDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
     }
@@ -66,9 +65,8 @@ export class StateController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.LOCATION_DATA__VIEW)
-  findOne(@Req() { user }: JwtAuthRequest, @Param('id', ParseIntPipe) id: number) {
+  @UseGuards(HybridAuthGuard)
+  findOne(@Req() { user }: HybridAuthRequest, @Param('id', ParseIntPipe) id: number) {
     return this.stateService.findOne(id, user.organizationId);
   }
 

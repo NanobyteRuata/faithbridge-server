@@ -289,19 +289,11 @@ async function createLocationData(organizationId: number) {
   console.log('✅ All location data created successfully.');
 }
 
-async function createOrgUserRole(organizationId: number, superAdmin: User, allPermissions: Permission[]): Promise<Role> {
-  const userPermissionStrings = [
-    'USER__VIEW_SELF',
-    'USER__UPDATE_SELF',
-    'MEMBERSHIP__VIEW',
-    'STATUS__VIEW',
-  ];
-
+async function createOrgUserRole(organizationId: number, superAdmin: User): Promise<Role> {
   const role = prisma.role.create({
     data: {
       organizationId,
       name: process.env.ORG_USER_ROLE_NAME ?? 'Org User Role',
-      permissions: { connect: allPermissions.filter(({permission}) => userPermissionStrings.includes(permission)) },
       createdById: superAdmin.id,
       updatedById: superAdmin.id
     },
@@ -362,13 +354,11 @@ async function createOrgAccessKey(organizationId: number, superAdmin: User, allP
       updatedById: superAdmin.id
     },
   });
-
-  const hashedCode = await bcrypt.hash('123456', 10);
   
   const accessKey = await prisma.accessCode.create({
     data: {
       name: 'Org Access Key',
-      hashedCode,
+      code: '123456',
       isActive: true,
       role: { connect: role },
       organization: { connect: { id: organizationId } },
@@ -388,7 +378,7 @@ async function main() {
   const allPermissions = await createOrganizationPermissions(organization.id, superAdmin);
   const orgAdminRole = await createOrgAdminRole(organization.id, superAdmin, allPermissions);
   const orgAdmin = await createOrgAdmin(organization.id, superAdmin, orgAdminRole);
-  const orgUserRole = await createOrgUserRole(organization.id, orgAdmin, allPermissions);
+  const orgUserRole = await createOrgUserRole(organization.id, orgAdmin);
   const orgUser = await createOrgUser(organization.id, orgAdmin, orgUserRole);
   const orgAccessKey = await createOrgAccessKey(organization.id, superAdmin, allPermissions);
 }

@@ -8,18 +8,20 @@ import {
   Delete,
   Req,
   Query,
-  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AccessCodeService } from './access-code.service';
 import { CreateAccessCodeDto } from './dto/request/create-access-code.dto';
 import { UpdateAccessCodeDto } from './dto/request/update-access-code.dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
-import { JwtAuthRequest } from '../user/interface/requests.interface';
+import { HybridAuthRequest, JwtAuthRequest } from '../user/interface/requests.interface';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { GetAccessCodesDto } from './dto/query/get-access-codes.dto';
 import { AccessCodeLoginDto } from './dto/request/access-code-login.dto';
+import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
 @Controller('access-code')
 export class AccessCodeController {
@@ -32,43 +34,35 @@ export class AccessCodeController {
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ACCESS_CODE__EDIT)
   create(
     @Body() createAccessCodeDto: CreateAccessCodeDto,
     @Req() { user }: JwtAuthRequest,
   ) {
-    if (createAccessCodeDto.organizationId !== user.organizationId) {
-      return new BadRequestException(
-        'Please provide the correct organizationId',
-      );
+    if (!user.organizationId) {
+      throw new ForbiddenException('User is not associated with any organization');
     }
 
-    return this.accessCodeService.create(createAccessCodeDto, user.sub);
+    return this.accessCodeService.create(createAccessCodeDto, user.sub, user.organizationId);
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions('SUPER_ADMIN')
-  findAll(@Query() query: GetAccessCodesDto, @Req() { user }: JwtAuthRequest) {
-    if (!user.isSuperAdmin && user.organizationId !== query.organizationId) {
-      return new BadRequestException(
-        'Please provide the correct organizationId',
-      );
-    }
-
-    return this.accessCodeService.findAll(query);
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.ACCESS_CODE__VIEW)
+  findAll(@Query() query: GetAccessCodesDto, @Req() { user }: HybridAuthRequest) {
+    return this.accessCodeService.findAll(query, user.organizationId);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions('SUPER_ADMIN')
-  findOne(@Param('id') id: string, @Req() { user }: JwtAuthRequest) {
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.ACCESS_CODE__VIEW)
+  findOne(@Param('id') id: string, @Req() { user }: HybridAuthRequest) {
     return this.accessCodeService.findOne(+id, user.organizationId);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ACCESS_CODE__EDIT)
   update(
     @Req() { user }: JwtAuthRequest,
     @Param('id') id: string,
@@ -84,7 +78,7 @@ export class AccessCodeController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions('SUPER_ADMIN')
+  @Permissions(PERMISSIONS.ACCESS_CODE__EDIT)
   remove(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
     return this.accessCodeService.remove(+id, user.sub, user.organizationId);
   }

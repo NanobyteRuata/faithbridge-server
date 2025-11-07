@@ -43,9 +43,8 @@ export class CountryController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.LOCATION_DATA__VIEW)
-  findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetCountriesDto) {
+  @UseGuards(HybridAuthGuard)
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetCountriesDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
     }
@@ -62,9 +61,8 @@ export class CountryController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.LOCATION_DATA__VIEW)
-  findOne(@Req() { user }: JwtAuthRequest, @Param('id', ParseIntPipe) id: number) {
+  @UseGuards(HybridAuthGuard)
+  findOne(@Req() { user }: HybridAuthRequest, @Param('id', ParseIntPipe) id: number) {
     return this.countryService.findOne(id, user.organizationId);
   }
 

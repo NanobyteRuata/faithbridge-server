@@ -44,9 +44,8 @@ export class CityController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.LOCATION_DATA__VIEW)
-  findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetCitiesDto) {
+  @UseGuards(HybridAuthGuard)
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetCitiesDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
     }
@@ -67,10 +66,9 @@ export class CityController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(PERMISSIONS.LOCATION_DATA__VIEW)
+  @UseGuards(HybridAuthGuard)
   findOne(
-    @Req() { user }: JwtAuthRequest,
+    @Req() { user }: HybridAuthRequest,
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.cityService.findOne(id, user.organizationId);
