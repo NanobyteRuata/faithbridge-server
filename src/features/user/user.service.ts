@@ -284,7 +284,12 @@ export class UserService {
     // Update refresh token in database
     await this.updateRefreshToken(session.id, tokens.refreshToken);
 
-    return tokens;
+    return new LoginResponseDto(
+      tokens.accessToken,
+      tokens.refreshToken,
+      deviceId,
+      jwtPayload?.permissions,
+    );
   }
 
   async logout(userId: number, refreshToken: string): Promise<boolean> {

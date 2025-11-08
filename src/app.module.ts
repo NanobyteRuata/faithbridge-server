@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UserModule } from './features/user/user.module';
 import { AppConfigModule } from './core/app-config/app-config.module';
 import { PrismaModule } from './core/prisma/prisma.module';
@@ -17,6 +18,7 @@ import { GroupModule } from './features/group/group.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     PrismaModule,
     AppConfigModule,
     UserModule,
