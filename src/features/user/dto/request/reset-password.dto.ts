@@ -3,13 +3,12 @@ import {
   IsEmail,
   IsString,
   IsOptional,
-  IsNumber,
 } from 'class-validator';
 
 export class ResetPasswordDto {
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  organizationId?: number;
+  organizationCode?: string;
 
   @IsEmail()
   @IsNotEmpty()

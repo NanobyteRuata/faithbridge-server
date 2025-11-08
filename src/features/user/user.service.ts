@@ -316,7 +316,7 @@ export class UserService {
   async sendPasswordResetCode(
     email: string,
     organizationCode?: string,
-  ): Promise<boolean> {
+  ): Promise<{ success: boolean; message: string }> {
     const user = await this.findUniqueOrgUser({
       userFilters: { email },
       organizationFilters: { organizationCode },
@@ -342,18 +342,21 @@ export class UserService {
       `<p>Your password reset code is: <b>${code}</b></p>`,
     );
 
-    return true;
+    return {
+      success: true,
+      message: "Password reset code sent successfully",
+    };
   }
 
   async resetPasswordWithCode(
     email: string,
     code: string,
     newPassword: string,
-    organizationId?: number,
-  ): Promise<boolean> {
+    organizationCode?: string,
+  ): Promise<{ success: boolean; message: string }> {
     const user = await this.findUniqueOrgUser({
       userFilters: { email },
-      organizationFilters: { organizationId },
+      organizationFilters: { organizationCode },
     });
     if (
       !user ||
@@ -364,21 +367,21 @@ export class UserService {
       throw new BadRequestException('Invalid or expired code');
     }
 
-    // eslint-disable-next-line
-    const hashed = await bcrypt.hash(newPassword, 10) as string;
-
     const filter = {
       userFilters: { email },
-      organizationFilters: { organizationId },
+      organizationFilters: { organizationCode },
     };
     const data = {
-      password: hashed,
+      password: newPassword,
       resetCode: null,
       resetCodeExpiresAt: null,
     };
     await this.updateOrgUser(filter, data);
 
-    return true;
+    return {
+      success: true,
+      message: "Password reset successfully",
+    };
   }
 
   private async generateTokens(

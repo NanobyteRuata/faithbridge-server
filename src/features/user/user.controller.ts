@@ -137,13 +137,13 @@ export class UserController {
 
   @Post('reset-password')
   async resetPassword(
-    @Body() { email, code, newPassword, organizationId }: ResetPasswordDto,
+    @Body() { email, code, newPassword, organizationCode }: ResetPasswordDto,
   ) {
     return await this.userService.resetPasswordWithCode(
       email,
       code,
       newPassword,
-      organizationId,
+      organizationCode,
     );
   }
 }
