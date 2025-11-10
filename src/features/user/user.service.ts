@@ -2,12 +2,14 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { Permission, Prisma, Role, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 import { UserJwtPayload } from '../../core/auth/interfaces/jwt-payload.interface';
 import { Tokens } from './interface/tokens.interface';
 import { RegisterDto } from './dto/request/register.dto';
@@ -39,6 +41,7 @@ interface FindUniqueOrgUserOrganizationFilterParams {
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -91,14 +94,16 @@ export class UserService {
 
   async updateOrgUser(
     filters: FindUniqieOrgUserParams,
-    data: Partial<User>,
+    data: Partial<User> & { hashedPassword?: string },
     include?: Prisma.UserInclude,
   ) {
     const user = await this.findUniqueOrgUser(filters, include);
     if (!user) return null;
 
-    if (data.password) {
+    if (!data.hashedPassword) {
       data.password = await bcrypt.hash(data.password, 10);
+    } else {
+      data.password = data.hashedPassword;
     }
 
     return await this.prisma.user.update({
@@ -264,8 +269,23 @@ export class UserService {
       },
     });
 
-    if (!session || new Date() > session.expiresAt) {
+    // Token reuse detection: If token not found, it may have been used already
+    // This could indicate a token theft - invalidate all sessions for this device
+    if (!session) {
+      this.logger.warn(
+        `Potential token reuse detected for user ${userId} on device ${deviceId}`,
+      );
+      // Invalidate all sessions for this device as a security measure
+      await this.prisma.session.deleteMany({
+        where: { userId, deviceId },
+      });
       throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // Check if token is expired
+    if (new Date() > session.expiresAt) {
+      await this.prisma.session.delete({ where: { id: session.id } });
+      throw new UnauthorizedException('Refresh token expired');
     }
 
     // Get user
@@ -281,7 +301,8 @@ export class UserService {
     // eslint-disable-next-line
     const { jwtPayload, ...tokens } = await this.generateTokens(user, deviceId);
 
-    // Update refresh token in database
+    // Implement token rotation: Update the refresh token in database
+    // The old refresh token is now invalid
     await this.updateRefreshToken(session.id, tokens.refreshToken);
 
     return new LoginResponseDto(
@@ -367,12 +388,16 @@ export class UserService {
       throw new BadRequestException('Invalid or expired code');
     }
 
+    // Hash the new password before storing
+    // eslint-disable-next-line
+    const hashedPassword: string = await bcrypt.hash(newPassword, 10);
+
     const filter = {
       userFilters: { email },
       organizationFilters: { organizationCode },
     };
     const data = {
-      password: newPassword,
+      hashedPassword,
       resetCode: null,
       resetCodeExpiresAt: null,
     };
@@ -404,6 +429,11 @@ export class UserService {
       permissions = role.permissions.map((permission) => permission.permission);
     }
 
+    // Generate unique identifiers for each token to prevent collisions
+    const accessTokenId = uuidv4();
+    const refreshTokenId = uuidv4();
+    const timestamp = Date.now();
+
     const jwtPayload: UserJwtPayload = {
       sub: user.id,
       organizationId: user.organizationId ?? undefined,
@@ -413,15 +443,27 @@ export class UserService {
     };
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(jwtPayload, {
-        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-        expiresIn: this.configService.get<string>(
-          'JWT_ACCESS_EXPIRE_IN',
-          '15m',
-        ),
-      }),
       this.jwtService.signAsync(
-        { ...jwtPayload, deviceId },
+        { 
+          ...jwtPayload, 
+          jti: accessTokenId,
+          iat: Math.floor(timestamp / 1000),
+        },
+        {
+          secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+          expiresIn: this.configService.get<string>(
+            'JWT_ACCESS_EXPIRE_IN',
+            '15m',
+          ),
+        },
+      ),
+      this.jwtService.signAsync(
+        { 
+          ...jwtPayload, 
+          deviceId,
+          jti: refreshTokenId,
+          iat: Math.floor(timestamp / 1000),
+        },
         {
           secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
           expiresIn: this.configService.get<string>(
