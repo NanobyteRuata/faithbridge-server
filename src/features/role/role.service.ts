@@ -128,7 +128,7 @@ export class RoleService {
     }
 
     // TODO: use userId for activity logging later
-    console.log('role removed by: user id:', user.sub);
+    console.warn('role removed by: user id:', user.sub);
     return await this.prisma.role.delete({ where: { id } });
   }
 }

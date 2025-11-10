@@ -67,7 +67,7 @@ export class OrganizationService {
   }
 
   remove(id: number, userId: number) {
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.organization.delete({ where: { id } });
   }
 }

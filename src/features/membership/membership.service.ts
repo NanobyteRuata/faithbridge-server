@@ -89,7 +89,7 @@ export class MembershipService {
     await this.findOne(id, userOrgId); // this will throw BadRequestException if membership not found
 
     // TODO: use userId for activity logging later
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.membership.delete({ where: { id } });
   }
 }

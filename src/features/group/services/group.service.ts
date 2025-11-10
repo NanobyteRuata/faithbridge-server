@@ -112,7 +112,7 @@ export class GroupService {
   async remove(id: number, userId: number, userOrgId?: number) {
     await this.findOne(id, userOrgId);
 
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.group.delete({ where: { id } });
   }
 }

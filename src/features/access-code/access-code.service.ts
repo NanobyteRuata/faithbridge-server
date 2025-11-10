@@ -113,7 +113,7 @@ export class AccessCodeService {
 
   async remove(id: number, userId: number, organizationId?: number) {
     // TODO: use userId for activity logging later
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.accessCode.delete({ where: { id, organizationId } });
   }
 }

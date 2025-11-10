@@ -56,3 +56,7 @@
     ```
     $ npx eslint ./src --quiet --fix
     ```
+
+### Documentation
+- **Security**: See `SECURITY.md` for security best practices
+- **Rate Limiting**: See `RATE_LIMITING.md` for rate limiting configuration

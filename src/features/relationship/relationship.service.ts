@@ -81,7 +81,7 @@ export class RelationshipService {
 
   removeRelationship(id: number, userId: number) {
     // TODO: use userId for activity logging later
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.relationship.delete({ where: { id } });
   }
 
@@ -153,7 +153,7 @@ export class RelationshipService {
 
   removeRelationshipType(id: number, userId: number) {
     // TODO: use userId for activity logging later
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.relationshipType.delete({ where: { id } });
   }
 }

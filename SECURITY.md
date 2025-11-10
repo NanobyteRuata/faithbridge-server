@@ -94,27 +94,51 @@ if (!session) {
 
 ## 🚦 Rate Limiting
 
-### Global Rate Limiting
+### Tiered Rate Limiting
 - **Package**: `@nestjs/throttler`
-- **Configuration**: 10 requests per 60 seconds per IP
-- **Location**: `src/app.module.ts`
-- **Scope**: Applied globally to all endpoints
+- **Configuration**: Custom decorators for different endpoint types
+- **Location**: `src/core/throttler/`
+- **Documentation**: See `RATE_LIMITING.md` for full details
+
+### Rate Limit Tiers
+
+| Tier | Limit | Use Case |
+|------|-------|----------|
+| **Auth** | 5/min | Login, token refresh |
+| **Password Reset** | 3/hour | Forgot/reset password |
+| **Write** | 30/min | Create, update, delete |
+| **Read** | 100/min | Get, list operations |
+| **Default** | 60/min | All other endpoints |
+
+### Implementation
 
 ```typescript
-ThrottlerModule.forRoot([{
-  ttl: 60000, // 60 seconds
-  limit: 10,  // 10 requests
-}])
-```
-
-### Customization
-To adjust rate limits for specific endpoints, use the `@Throttle()` decorator:
-
-```typescript
-@Throttle({ default: { limit: 3, ttl: 60000 } })
+// Authentication endpoints
+@ThrottleAuth()
 @Post('login')
 login() { ... }
+
+// Password reset
+@ThrottlePasswordReset()
+@Post('forgot-password')
+forgotPassword() { ... }
+
+// Write operations
+@ThrottleWrite()
+@Post()
+create() { ... }
+
+// Read operations
+@ThrottleRead()
+@Get()
+findAll() { ... }
 ```
+
+### Applied To
+- ✅ User authentication endpoints (login, refresh, logout)
+- ✅ Password reset endpoints (forgot, reset)
+- ✅ User management endpoints (CRUD operations)
+- 📋 Other controllers: Apply as needed using decorators
 
 ## 🔍 Input Validation
 

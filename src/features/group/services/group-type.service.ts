@@ -102,7 +102,7 @@ export class GroupTypeService {
   async remove(id: number, userId: number, userOrgId?: number) {
     await this.findOne(id, userOrgId);
 
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.groupType.delete({ where: { id } });
   }
 }

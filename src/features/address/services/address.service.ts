@@ -80,7 +80,7 @@ export class AddressService {
   }
 
   remove(id: number, userId: number) {
-    console.log('Address deleted by:', userId);
+    console.warn('Address deleted by:', userId);
     return this.prisma.address.delete({ where: { id } });
   }
 }

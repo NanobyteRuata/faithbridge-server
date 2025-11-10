@@ -331,7 +331,7 @@ export class ProfileService {
 
   remove(id: number, userId: number) {
     // TODO: use userId for activity logging later
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.profile.delete({ where: { id } });
   }
 

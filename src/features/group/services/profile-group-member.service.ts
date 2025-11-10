@@ -120,7 +120,7 @@ export class ProfileGroupMemberService {
   async remove(id: number, userId: number, userOrgId?: number) {
     await this.findOne(id, userOrgId);
 
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.groupProfile.delete({ where: { id } });
   }
 }

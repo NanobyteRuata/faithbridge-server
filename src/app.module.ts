@@ -17,14 +17,12 @@ import { AddressModule } from './features/address/address.module';
 import { OrganizationModule } from './features/organization/organization.module';
 import { PermissionModule } from './features/permission/permission.module';
 import { GroupModule } from './features/group/group.module';
+import { THROTTLE_CONFIG } from './core/throttler/throttler.config';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // 60 seconds
-      limit: 10, // 10 requests per minute
-    }]),
+    ThrottlerModule.forRoot([THROTTLE_CONFIG.default]),
     PrismaModule,
     AppConfigModule,
     UserModule,

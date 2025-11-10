@@ -88,7 +88,7 @@ export class PermissionService {
   }
 
   remove(id: number, userId: number) {
-    console.log('removed by:', userId);
+    console.warn('removed by:', userId);
     return this.prisma.permission.delete({ where: { id } });
   }
 }

@@ -36,12 +36,19 @@ import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { UpdateUserDto } from './dto/request/update-user.dto';
 import { GetUsersDto } from './dto/query/get-users.dto';
 import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
+import {
+  ThrottleAuth,
+  ThrottlePasswordReset,
+  ThrottleRead,
+  ThrottleWrite,
+} from 'src/core/throttler/throttler.decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @ThrottleRead()
   @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.USER__VIEW)
   getAll(@Req() { user }: HybridAuthRequest, @Query() query: GetUsersDto) {
@@ -49,12 +56,14 @@ export class UserController {
   }
 
   @Get('self')
+  @ThrottleRead()
   @UseGuards(JwtAuthGuard)
   getSelf(@Req() { user }: JwtAuthRequest) {
     return this.userService.findUniqueOrgUser({ userFilters: { id: user.sub } });
   }
 
   @Get(':id')
+  @ThrottleRead()
   @UseGuards(HybridAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.USER__VIEW)
   getOne(@Param('id') id: number) {
@@ -62,6 +71,7 @@ export class UserController {
   }
 
   @Post('register')
+  @ThrottleWrite()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.USER__EDIT)
   register(@Req() { user }: JwtAuthRequest, @Body() registerDto: RegisterDto) {
@@ -73,6 +83,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @ThrottleWrite()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.USER__EDIT)
   update(@Req() { user }: JwtAuthRequest, @Body() updateDto: UpdateUserDto, @Param('id') id: number) {
@@ -80,12 +91,14 @@ export class UserController {
   }
 
   @Patch('self')
+  @ThrottleWrite()
   @UseGuards(JwtAuthGuard)
   updateSelf(@Req() { user }: JwtAuthRequest, @Body() updateDto: UpdateUserDto) {
     delete updateDto.id;
     return this.userService.updateUser(user.sub, updateDto);
   }
 
+  @ThrottleAuth()
   @UseGuards(LocalAuthGuard)
   @Post('login')
   login(
@@ -98,6 +111,7 @@ export class UserController {
     return this.userService.login(req.user, deviceId, userAgent, ip);
   }
 
+  @ThrottleAuth()
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   refreshTokens(
@@ -115,18 +129,21 @@ export class UserController {
     return this.userService.refreshTokens(userId, refreshToken, deviceId);
   }
 
+  @ThrottleWrite()
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   logout(@Request() req: JwtAuthRequest, @Body() { refreshToken }: LogoutDto) {
     return this.userService.logout(req.user.sub, refreshToken);
   }
 
+  @ThrottleWrite()
   @UseGuards(JwtAuthGuard)
   @Post('logout-all')
   logoutAll(@Request() req: JwtAuthRequest) {
     return this.userService.logoutAll(req.user.sub);
   }
 
+  @ThrottlePasswordReset()
   @Post('forgot-password')
   async forgotPassword(@Body() { email, organizationCode }: ForgotPasswordDto) {
     return await this.userService.sendPasswordResetCode(
@@ -135,6 +152,7 @@ export class UserController {
     );
   }
 
+  @ThrottlePasswordReset()
   @Post('reset-password')
   async resetPassword(
     @Body() { email, code, newPassword, organizationCode }: ResetPasswordDto,

@@ -83,7 +83,7 @@ export class StatusService {
     await this.findOne(id, userOrgId); // this will throw BadRequestException if status not found
     
     // TODO: use userId for activity logging later
-    console.log(userId);
+    console.warn(userId);
     return this.prisma.status.delete({ where: { id } });
   }
 }
