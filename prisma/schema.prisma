@@ -40,6 +40,7 @@ model Organization {
   groupRoles        GroupRole[]
   groupMemberships  GroupProfile[]
   groups            Group[]
+  households        Household[]
 
   createdById Int?
   createdBy   User? @relation("OrganizationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -140,6 +141,9 @@ model User {
 
   createdGroups Group[] @relation("GroupCreatedBy")
   updatedGroups Group[] @relation("GroupUpdatedBy")
+
+  createdHouseholds Household[] @relation("HouseholdCreatedBy")
+  updatedHouseholds Household[] @relation("HouseholdUpdatedBy")
 
   @@unique([email, organizationId])
   @@unique([phone, organizationId])
@@ -256,6 +260,10 @@ model Profile {
 
   groupMemberships GroupProfile[]
 
+  householdAsHead Household? @relation("HouseholdHead")
+  householdId     Int?
+  household       Household? @relation("HouseholdMembers", fields: [householdId], references: [id], onDelete: SetNull)
+
   isPersonalEmailPublic Boolean @default(true)
   personalEmail         String?
 
@@ -328,6 +336,8 @@ model Address {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   profiles Profile[]
+
+  household Household?
 
   isPublic   Boolean   @default(true)
   room       String?
@@ -601,4 +611,33 @@ model GroupProfile {
   @@unique([profileId, groupId])
   @@index([groupId])
   @@index([groupRoleId])
+}
+
+model Household {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+
+  headProfileId Int?     @unique
+  headProfile   Profile? @relation("HouseholdHead", fields: [headProfileId], references: [id], onDelete: SetNull)
+
+  addressId Int?     @unique
+  address   Address? @relation(fields: [addressId], references: [id], onDelete: SetNull)
+
+  members Profile[] @relation("HouseholdMembers")
+
+  createdById Int?
+  createdBy   User?    @relation("HouseholdCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User?    @relation("HouseholdUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+  @@index([headProfileId])
 }

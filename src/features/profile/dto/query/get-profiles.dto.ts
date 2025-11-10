@@ -1,12 +1,7 @@
 import { PaginationDto } from 'src/shared/dto/query/pagination.dto';
 import { Transform, Type } from 'class-transformer';
 import { IsOptional, IsArray, IsInt, IsBoolean } from 'class-validator';
-
-// Helper to transform single value or array to array
-const toArray = ({ value }: { value: any }) => {
-  if (value === undefined || value === null) return undefined;
-  return Array.isArray(value) ? value : [value];
-};
+import { toArray } from 'src/shared/util/to-array';
 
 export class GetProfilesDto extends PaginationDto {
   @IsOptional()
@@ -50,6 +45,13 @@ export class GetProfilesDto extends PaginationDto {
   @IsInt({ each: true })
   @Type(() => Number)
   countryIds?: number[];
+
+  @IsOptional()
+  @Transform(toArray)
+  @IsArray()
+  @IsInt({ each: true })
+  @Type(() => Number)
+  householdIds?: number[];
 
   @IsOptional()
   @Transform(({ value }) => {

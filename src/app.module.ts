@@ -18,6 +18,7 @@ import { OrganizationModule } from './features/organization/organization.module'
 import { PermissionModule } from './features/permission/permission.module';
 import { GroupModule } from './features/group/group.module';
 import { THROTTLE_CONFIG } from './core/throttler/throttler.config';
+import { HouseholdModule } from './features/household/household.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { THROTTLE_CONFIG } from './core/throttler/throttler.config';
     OrganizationModule,
     PermissionModule,
     GroupModule,
+    HouseholdModule,
   ],
   providers: [
     {

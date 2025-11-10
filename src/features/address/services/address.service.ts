@@ -3,6 +3,7 @@ import { CreateAddressDto } from '../dto/requests/address/create-address.dto';
 import { UpdateAddressDto } from '../dto/requests/address/update-address.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { GetAddressesDto } from '../dto/query/get-addresses.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AddressService {
@@ -14,13 +15,12 @@ export class AddressService {
     });
   }
 
-  findAll(
+  async findAll(
     { skip, limit, search, townshipIds, cityIds, stateIds, countryIds }: GetAddressesDto,
     organizationId?: number,
   ) {
     const searchTerm = search?.trim();
-    
-    return this.prisma.address.findMany({
+    const args: Prisma.AddressFindManyArgs = {
       skip,
       take: limit,
       where: {
@@ -61,7 +61,22 @@ export class AddressService {
           },
         },
       },
-    });
+    }
+    
+    const [addresses, total] = await this.prisma.$transaction([
+      this.prisma.address.findMany(args),
+      this.prisma.address.count({ where: args.where }),
+    ]);
+
+    return {
+      data: addresses,
+      meta: {
+        page: skip,
+        limit,
+        total,
+      },
+      success: true,
+    };
   }
 
   findOne(id: number, organizationId?: number) {

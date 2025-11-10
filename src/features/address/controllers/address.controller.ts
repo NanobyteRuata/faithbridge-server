@@ -18,15 +18,17 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { GetAddressesDto } from '../dto/query/get-addresses.dto';
-import { JwtAuthRequest } from '../../user/interface/requests.interface';
+import { HybridAuthRequest, JwtAuthRequest } from '../../user/interface/requests.interface';
+import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
+import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
 @Controller('address')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
   @Post()
-  @Permissions('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.PROFILE__EDIT)
   create(
     @Req() { user }: JwtAuthRequest,
     @Body() createAddressDto: CreateAddressDto,
@@ -40,19 +42,20 @@ export class AddressController {
   }
 
   @Get()
-  @Permissions('SUPER_ADMIN')
-  findAll(@Req() { user }: JwtAuthRequest, @Query() query: GetAddressesDto) {
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetAddressesDto) {
     return this.addressService.findAll(query, user.organizationId);
   }
 
   @Get(':id')
-  @Permissions('SUPER_ADMIN')
-  findOne(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  findOne(@Req() { user }: HybridAuthRequest, @Param('id') id: string) {
     return this.addressService.findOne(+id, user.organizationId);
   }
 
   @Patch(':id')
-  @Permissions('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.PROFILE__EDIT)
   update(
     @Req() { user }: JwtAuthRequest,
     @Param('id') id: string,
@@ -70,7 +73,8 @@ export class AddressController {
   }
 
   @Delete(':id')
-  @Permissions('SUPER_ADMIN')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.PROFILE__EDIT)
   remove(@Req() { user }: JwtAuthRequest, @Param('id') id: string) {
     return this.addressService.remove(+id, user.sub);
   }

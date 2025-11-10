@@ -41,6 +41,12 @@ export class ProfileController {
     return this.profileService.findAll(query, req.user.organizationId);
   }
 
+  @Get('dropdown')
+  @UseGuards(HybridAuthGuard)
+  findAllDropdown(@Query() query: GetProfilesDto, @Req() req: JwtAuthRequest) {
+    return this.profileService.findAllDropdown(query, req.user.organizationId);
+  }
+
   @Get(':id')
   @UseGuards(HybridAuthGuard)
   findOne(@Param('id') id: string, @Req() req: JwtAuthRequest) {

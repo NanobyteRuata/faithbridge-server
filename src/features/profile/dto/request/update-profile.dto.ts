@@ -3,10 +3,10 @@ import { CreateProfileDto } from './create-profile.dto';
 import { IsArray, IsNumber, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateAddressDto } from 'src/features/address/dto/requests/address/create-address.dto';
-import { NullToUndefined } from 'src/shared/decorators/null-to-undefined.decorator';
+import { NullOrEmptyToUndefined } from 'src/shared/decorators/null-to-undefined.decorator';
 
 export class UpdateProfileDto extends OmitType(PartialType(CreateProfileDto), ['addresses'] as const) {
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -15,7 +15,7 @@ export class UpdateProfileDto extends OmitType(PartialType(CreateProfileDto), ['
 }
 
 export class UpdateProfileAddressDto extends CreateAddressDto {
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsNumber()
   id?: number; // If id exists, update; if no id, create; if existing id not in array, delete

@@ -34,7 +34,7 @@ export class ProfileService {
     userId: number,
     organizationId?: number,
   ) {
-    const { addresses, membershipId, statusId, ...profileData } =
+    const { addresses, membershipId, statusId, householdId, ...profileData } =
       createProfileDto;
 
     return this.prisma.$transaction(async (tx) => {
@@ -50,6 +50,7 @@ export class ProfileService {
             membership: { connect: { id: membershipId } },
           }),
           ...(statusId && { status: { connect: { id: statusId } } }),
+          ...(householdId && { household: { connect: { id: householdId } } }),
           createdBy: {
             connect: {
               id: userId,
@@ -107,6 +108,7 @@ export class ProfileService {
       cityIds,
       stateIds,
       countryIds,
+      householdIds,
       isUser,
     }: GetProfilesDto,
     organizationId?: number,
@@ -178,6 +180,9 @@ export class ProfileService {
               },
             },
           }),
+        ...(householdIds && {
+          household: { id: { in: householdIds } },
+        }),
         ...(isUser != null && {
           user: isUser ? { isNot: null } : { is: null },
         }),
@@ -186,6 +191,16 @@ export class ProfileService {
         status: true,
         membership: true,
         user: true,
+        household: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            headProfileId: true,
+            addressId: true,
+            members: true,
+          },
+        },
         ...addressInclude,
       },
     };
@@ -214,6 +229,40 @@ export class ProfileService {
     };
   }
 
+  async findAllDropdown({ search }: GetProfilesDto, organizationId?: number) {
+    return this.prisma.profile.findMany({
+      where: { organizationId, ...(search && {
+          OR: [
+            {
+              title: {
+                contains: search?.trim(),
+                mode: 'insensitive',
+              },
+            },
+            {
+              name: {
+                contains: search?.trim(),
+                mode: 'insensitive',
+              },
+            },
+            {
+              lastName: {
+                contains: search?.trim(),
+                mode: 'insensitive',
+              },
+            },
+            {
+              nickName: {
+                contains: search?.trim(),
+                mode: 'insensitive',
+              },
+            },
+          ],
+        }) },
+      select: { id: true, name: true },
+    });
+  }
+
   async findOne(id: number, organizationId?: number) {
     const profile = await this.prisma.profile.findUnique({
       where: { id, organizationId },
@@ -221,6 +270,16 @@ export class ProfileService {
         status: true,
         membership: true,
         user: true,
+        household: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            headProfileId: true,
+            addressId: true,
+            members: true,
+          },
+        },
         ...addressInclude,
       },
     });

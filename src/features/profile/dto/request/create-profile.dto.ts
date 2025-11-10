@@ -10,7 +10,7 @@ import {
   IsArray,
 } from 'class-validator';
 import { CreateAddressDto } from 'src/features/address/dto/requests/address/create-address.dto';
-import { NullToUndefined } from 'src/shared/decorators/null-to-undefined.decorator';
+import { NullOrEmptyToUndefined } from 'src/shared/decorators/null-to-undefined.decorator';
 
 export class CreateProfileDto {
   @IsString()
@@ -21,117 +21,121 @@ export class CreateProfileDto {
   @IsNotEmpty()
   name: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   lastName?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   nickName?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsNumber()
   membershipId?: number;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsNumber()
   statusId: number;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsBoolean()
   isPersonalEmailPublic?: boolean;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsEmail()
   personalEmail?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsBoolean()
   isWorkEmailPublic?: boolean;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsEmail()
   workEmail?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsBoolean()
   isPersonalPhonePublic?: boolean;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   personalPhone?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsBoolean()
   isHomePhonePublic?: boolean;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   homePhone?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsBoolean()
   isOtherContact1Public?: boolean;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   otherContact1Type?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   otherContact1?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsBoolean()
   isOtherContact2Public?: boolean;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   otherContact2Type?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   otherContact2?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsBoolean()
   isOtherContact3Public?: boolean;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   otherContact3Type?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsString()
   otherContact3?: string;
 
-  @NullToUndefined()
+  @NullOrEmptyToUndefined()
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateProfileAddressDto)
   addresses?: CreateProfileAddressDto[];
+
+  @IsOptional()
+  @IsNumber()
+  householdId?: number;
 }
 
 export class CreateProfileAddressDto extends CreateAddressDto {
