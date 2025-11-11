@@ -136,6 +136,10 @@ export class CreateProfileDto {
   @IsOptional()
   @IsNumber()
   householdId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  groupId?: number;
 }
 
 export class CreateProfileAddressDto extends CreateAddressDto {

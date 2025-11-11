@@ -34,7 +34,7 @@ export class ProfileService {
     userId: number,
     organizationId?: number,
   ) {
-    const { addresses, membershipId, statusId, householdId, ...profileData } =
+    const { addresses, membershipId, statusId, householdId, groupId, ...profileData } =
       createProfileDto;
 
     return this.prisma.$transaction(async (tx) => {
@@ -51,6 +51,16 @@ export class ProfileService {
           }),
           ...(statusId && { status: { connect: { id: statusId } } }),
           ...(householdId && { household: { connect: { id: householdId } } }),
+          ...(groupId && {
+            groupMemberships: {
+              create: {
+                groupId: groupId,
+                organizationId: organizationId!,
+                createdById: userId,
+                updatedById: userId,
+              },
+            },
+          }),
           createdBy: {
             connect: {
               id: userId,
@@ -301,7 +311,8 @@ export class ProfileService {
     userId: number,
     organizationId?: number,
   ) {
-    const { addresses, ...profileData } = updateProfileDto;
+    const { addresses, membershipId, statusId, householdId, groupId, ...profileData } =
+      updateProfileDto;
 
     return this.prisma.$transaction(async (tx) => {
       // Update profile data
@@ -309,6 +320,29 @@ export class ProfileService {
         where: { id, organizationId },
         data: {
           ...profileData,
+          ...(groupId && {
+            groupMemberships: {
+              connectOrCreate: [
+                {
+                  where: {
+                    profileId_groupId: {
+                      profileId: id,
+                      groupId,
+                    },
+                  },
+                  create: {
+                    groupId,
+                    organizationId: organizationId!,
+                    createdById: userId,
+                    updatedById: userId,
+                  },
+                },
+              ],
+            },
+          }),
+          ...(membershipId !== undefined && { membershipId }),
+          ...(statusId !== undefined && { statusId }),
+          ...(householdId !== undefined && { householdId }),
           updatedById: userId,
         },
       });
