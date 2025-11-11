@@ -12,34 +12,34 @@ import {
   BadRequestException,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ProfileGroupMemberService } from '../services/profile-group-member.service';
-import { CreateProfileGroupMemberDto } from '../dto/request/profile-group-member/create-profile-group-member.dto';
-import { UpdateProfileGroupMemberDto } from '../dto/request/profile-group-member/update-profile-group-member.dto';
+import { GroupProfileService } from '../services/group-profile.service';
+import { CreateGroupProfileDto } from '../dto/request/group-profile/create-group-profile';
+import { UpdateGroupProfileDto } from '../dto/request/group-profile/update-group-profile';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { HybridAuthRequest, JwtAuthRequest } from '../../user/interface/requests.interface';
-import { GetProfileGroupMembersDto } from '../dto/query/get-profile-group-members.dto';
+import { GetGroupProfilesDto } from '../dto/query/get-group-profiles.dto';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
-@Controller('profile-group-member')
+@Controller('group-profile')
 export class ProfileGroupMemberController {
-  constructor(private readonly profileGroupMemberService: ProfileGroupMemberService) {}
+  constructor(private readonly groupProfileService: GroupProfileService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.GROUP__EDIT)
   create(
     @Req() { user }: JwtAuthRequest,
-    @Body() createProfileGroupMemberDto: CreateProfileGroupMemberDto,
+    @Body() createProfileGroupMemberDto: CreateGroupProfileDto,
   ) {
     const organizationId = createProfileGroupMemberDto.organizationId || user.organizationId;
     if (!organizationId) {
       throw new BadRequestException('Organization ID is required');
     }
 
-    return this.profileGroupMemberService.create(
+    return this.groupProfileService.create(
       createProfileGroupMemberDto,
       user.sub,
       organizationId,
@@ -48,17 +48,17 @@ export class ProfileGroupMemberController {
 
   @Get()
   @UseGuards(HybridAuthGuard)
-  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetProfileGroupMembersDto) {
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetGroupProfilesDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
     }
-    return this.profileGroupMemberService.findAll(query);
+    return this.groupProfileService.findAll(query);
   }
 
   @Get(':id')
   @UseGuards(HybridAuthGuard)
   findOne(@Req() { user }: HybridAuthRequest, @Param('id', ParseIntPipe) id: number) {
-    return this.profileGroupMemberService.findOne(id, user.organizationId);
+    return this.groupProfileService.findOne(id, user.organizationId);
   }
 
   @Patch(':id')
@@ -67,9 +67,9 @@ export class ProfileGroupMemberController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: JwtAuthRequest,
-    @Body() updateProfileGroupMemberDto: UpdateProfileGroupMemberDto,
+    @Body() updateProfileGroupMemberDto: UpdateGroupProfileDto,
   ) {
-    return this.profileGroupMemberService.update(
+    return this.groupProfileService.update(
       id,
       updateProfileGroupMemberDto,
       req.user.sub,
@@ -81,6 +81,6 @@ export class ProfileGroupMemberController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.GROUP__EDIT)
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: JwtAuthRequest) {
-    return this.profileGroupMemberService.remove(id, req.user.sub, req.user.organizationId);
+    return this.groupProfileService.remove(id, req.user.sub, req.user.organizationId);
   }
 }

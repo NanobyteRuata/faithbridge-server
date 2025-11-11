@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { GroupTypeService } from './services/group-type.service';
 import { GroupRoleService } from './services/group-role.service';
 import { GroupService } from './services/group.service';
-import { ProfileGroupMemberService } from './services/profile-group-member.service';
+import { GroupProfileService } from './services/group-profile.service';
 import { GroupTypeController } from './controllers/group-type.controller';
 import { GroupRoleController } from './controllers/group-role.controller';
 import { GroupController } from './controllers/group.controller';
-import { ProfileGroupMemberController } from './controllers/profile-group-member.controller';
+import { ProfileGroupMemberController } from './controllers/group-profile.controller';
 
 @Module({
   controllers: [
@@ -19,7 +19,7 @@ import { ProfileGroupMemberController } from './controllers/profile-group-member
     GroupTypeService,
     GroupRoleService,
     GroupService,
-    ProfileGroupMemberService,
+    GroupProfileService,
   ],
 })
 export class GroupModule {}

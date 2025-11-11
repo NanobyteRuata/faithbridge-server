@@ -109,6 +109,7 @@ export class ProfileService {
       stateIds,
       countryIds,
       householdIds,
+      groupIds,
       isUser,
     }: GetProfilesDto,
     organizationId?: number,
@@ -182,6 +183,9 @@ export class ProfileService {
           }),
         ...(householdIds && {
           household: { id: { in: householdIds } },
+        }),
+        ...(groupIds && {
+          groupMemberships: { some: { groupId: { in: groupIds } } },
         }),
         ...(isUser != null && {
           user: isUser ? { isNot: null } : { is: null },

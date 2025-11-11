@@ -54,6 +54,13 @@ export class GetProfilesDto extends PaginationDto {
   householdIds?: number[];
 
   @IsOptional()
+  @Transform(toArray)
+  @IsArray()
+  @IsInt({ each: true })
+  @Type(() => Number)
+  groupIds?: number[];
+
+  @IsOptional()
   @Transform(({ value }) => {
     if (value === undefined || value === null) return undefined;
     if (value === 'true' || value === true) return true;

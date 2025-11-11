@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { CreateGroupDto } from '../dto/request/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/request/group/update-group.dto';
-import { GetProfileGroupsDto } from '../dto/query/get-profile-groups.dto';
+import { GetGroupsDto } from '../dto/query/get-groups.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -24,7 +24,7 @@ export class GroupService {
     });
   }
 
-  async findAll({ skip, limit, search, organizationId, groupTypeId }: GetProfileGroupsDto) {
+  async findAll({ skip, limit, search, organizationId, groupTypeId, profileId }: GetGroupsDto) {
     const args: Prisma.GroupFindManyArgs = {
       skip,
       take: limit,
@@ -34,10 +34,11 @@ export class GroupService {
         ...(search?.trim() && {
           name: { contains: search.trim(), mode: 'insensitive' },
         }),
+        ...(profileId && { members: { every: { id: profileId } } }),
       },
       include: {
         groupType: {
-          select: { id: true, code: true, name: true },
+          select: { id: true, organizationId: true, code: true, name: true },
         },
         _count: {
           select: { members: true },

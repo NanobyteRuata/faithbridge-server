@@ -1,16 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
-import { CreateProfileGroupMemberDto } from '../dto/request/profile-group-member/create-profile-group-member.dto';
-import { UpdateProfileGroupMemberDto } from '../dto/request/profile-group-member/update-profile-group-member.dto';
-import { GetProfileGroupMembersDto } from '../dto/query/get-profile-group-members.dto';
+import { CreateGroupProfileDto } from '../dto/request/group-profile/create-group-profile';
+import { UpdateGroupProfileDto } from '../dto/request/group-profile/update-group-profile';
+import { GetGroupProfilesDto } from '../dto/query/get-group-profiles.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
-export class ProfileGroupMemberService {
+export class GroupProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(
-    createProfileGroupMemberDto: CreateProfileGroupMemberDto,
+    createProfileGroupMemberDto: CreateGroupProfileDto,
     userId: number,
     organizationId: number,
   ) {
@@ -32,7 +32,7 @@ export class ProfileGroupMemberService {
     groupId,
     profileId,
     groupRoleId,
-  }: GetProfileGroupMembersDto) {
+  }: GetGroupProfilesDto) {
     const args: Prisma.GroupProfileFindManyArgs = {
       skip,
       take: limit,
@@ -55,10 +55,10 @@ export class ProfileGroupMemberService {
           select: { id: true, name: true, lastName: true, nickName: true },
         },
         group: {
-          select: { id: true, name: true },
+          select: { id: true, organizationId: true, name: true, groupTypeId: true },
         },
         groupRole: {
-          select: { id: true, code: true, name: true },
+          select: { id: true, organizationId: true, groupTypeId: true, code: true, name: true },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -105,7 +105,7 @@ export class ProfileGroupMemberService {
 
   async update(
     id: number,
-    updateProfileGroupMemberDto: UpdateProfileGroupMemberDto,
+    updateProfileGroupMemberDto: UpdateGroupProfileDto,
     userId: number,
     userOrgId?: number,
   ) {

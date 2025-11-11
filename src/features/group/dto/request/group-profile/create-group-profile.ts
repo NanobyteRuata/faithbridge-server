@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsDate, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
-export class CreateProfileGroupMemberDto {
+export class CreateGroupProfileDto {
   @IsNumber()
   @IsOptional()
   organizationId?: number;

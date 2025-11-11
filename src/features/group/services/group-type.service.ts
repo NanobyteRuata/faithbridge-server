@@ -61,7 +61,7 @@ export class GroupTypeService {
     };
   }
 
-  findAllDropdown(organizationId: number) {
+  findAllDropdown(organizationId?: number) {
     return this.prisma.groupType.findMany({
       where: { organizationId },
       select: { id: true, code: true, name: true },

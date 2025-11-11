@@ -57,11 +57,11 @@ export class GroupTypeController {
 
   @Get('dropdown')
   @UseGuards(HybridAuthGuard)
-  findAllDropdown(@Req() { user }: HybridAuthRequest) {
-    if (!user.organizationId) {
-      throw new BadRequestException('Organization ID is required');
+  findAllDropdown(@Req() { user }: HybridAuthRequest, @Query() query: GetGroupTypesDto) {
+    if (user.organizationId) {
+      query.organizationId = user.organizationId;
     }
-    return this.groupTypeService.findAllDropdown(user.organizationId);
+    return this.groupTypeService.findAllDropdown(query.organizationId);
   }
 
   @Get(':id')

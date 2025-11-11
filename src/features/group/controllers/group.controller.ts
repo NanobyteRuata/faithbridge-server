@@ -19,7 +19,7 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/core/auth/guards/permissions.guard';
 import { Permissions } from 'src/core/auth/decorators/permissions.decorator';
 import { HybridAuthRequest, JwtAuthRequest } from '../../user/interface/requests.interface';
-import { GetProfileGroupsDto } from '../dto/query/get-profile-groups.dto';
+import { GetGroupsDto } from '../dto/query/get-groups.dto';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
 
@@ -48,7 +48,7 @@ export class GroupController {
 
   @Get()
   @UseGuards(HybridAuthGuard)
-  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetProfileGroupsDto) {
+  findAll(@Req() { user }: HybridAuthRequest, @Query() query: GetGroupsDto) {
     if (user.organizationId) {
       query.organizationId = user.organizationId;
     }
@@ -57,7 +57,7 @@ export class GroupController {
 
   @Get('dropdown')
   @UseGuards(HybridAuthGuard)
-  findAllDropdown(@Req() { user }: HybridAuthRequest, @Query() query: GetProfileGroupsDto) {
+  findAllDropdown(@Req() { user }: HybridAuthRequest, @Query() query: GetGroupsDto) {
     if (!user.organizationId) {
       throw new BadRequestException('Organization ID is required');
     }
