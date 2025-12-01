@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Ip,
@@ -40,6 +41,7 @@ import {
   ThrottleAuth,
   ThrottlePasswordReset,
   ThrottleRead,
+  ThrottleRefresh,
   ThrottleWrite,
 } from 'src/core/throttler/throttler.decorator';
 
@@ -59,7 +61,9 @@ export class UserController {
   @ThrottleRead()
   @UseGuards(JwtAuthGuard)
   getSelf(@Req() { user }: JwtAuthRequest) {
-    return this.userService.findUniqueOrgUser({ userFilters: { id: user.sub } });
+    return this.userService.findUniqueOrgUser({
+      userFilters: { id: user.sub },
+    });
   }
 
   @Get(':id')
@@ -86,14 +90,29 @@ export class UserController {
   @ThrottleWrite()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Permissions(PERMISSIONS.USER__EDIT)
-  update(@Req() { user }: JwtAuthRequest, @Body() updateDto: UpdateUserDto, @Param('id') id: number) {
+  update(
+    @Req() { user }: JwtAuthRequest,
+    @Body() updateDto: UpdateUserDto,
+    @Param('id') id: number,
+  ) {
     return this.userService.updateUser(id, updateDto, user.organizationId);
+  }
+
+  @Delete(':id')
+  @ThrottleWrite()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.USER__EDIT)
+  delete(@Req() { user }: JwtAuthRequest, @Param('id') id: number) {
+    return this.userService.deleteUser(id, user.organizationId);
   }
 
   @Patch('self')
   @ThrottleWrite()
   @UseGuards(JwtAuthGuard)
-  updateSelf(@Req() { user }: JwtAuthRequest, @Body() updateDto: UpdateUserDto) {
+  updateSelf(
+    @Req() { user }: JwtAuthRequest,
+    @Body() updateDto: UpdateUserDto,
+  ) {
     delete updateDto.id;
     return this.userService.updateUser(user.sub, updateDto);
   }
@@ -111,7 +130,7 @@ export class UserController {
     return this.userService.login(req.user, deviceId, userAgent, ip);
   }
 
-  @ThrottleAuth()
+  @ThrottleRefresh()
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   refreshTokens(
@@ -132,8 +151,8 @@ export class UserController {
   @ThrottleWrite()
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  logout(@Request() req: JwtAuthRequest, @Body() { refreshToken }: LogoutDto) {
-    return this.userService.logout(req.user.sub, refreshToken);
+  logout(@Request() req: JwtAuthRequest, @Body() { refreshToken, deviceId }: LogoutDto) {
+    return this.userService.logout(req.user.sub, refreshToken, deviceId);
   }
 
   @ThrottleWrite()

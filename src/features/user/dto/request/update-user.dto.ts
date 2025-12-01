@@ -6,12 +6,6 @@ export class UpdateUserDto {
   id?: number;
 
   @IsString()
-  @MinLength(3)
-  @MaxLength(20)
-  @IsOptional()
-  username?: string;
-
-  @IsString()
   @IsOptional()
   @IsEmail()
   email?: string;
@@ -21,10 +15,6 @@ export class UpdateUserDto {
   @MaxLength(100)
   @IsOptional()
   password?: string;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
 
   @IsOptional()
   @IsBoolean()

@@ -22,6 +22,8 @@ import { HybridAuthRequest, JwtAuthRequest } from '../../user/interface/requests
 import { GetGroupsDto } from '../dto/query/get-groups.dto';
 import { PERMISSIONS } from 'src/shared/constants/permissions.constant';
 import { HybridAuthGuard } from 'src/core/auth/guards/hybrid-auth.guard';
+import { AddGroupMembersDto } from '../dto/request/group/add-group-members';
+import { RemoveGroupMembersDto } from '../dto/request/group/remove-group-members.dto';
 
 @Controller('group')
 export class GroupController {
@@ -91,5 +93,27 @@ export class GroupController {
   @Permissions(PERMISSIONS.GROUP__EDIT)
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: JwtAuthRequest) {
     return this.groupService.remove(id, req.user.sub, req.user.organizationId);
+  }
+
+  @Post(':id/member/add')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.GROUP__EDIT)
+  addMembers(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: JwtAuthRequest,
+    @Body() { profileIds, groupRoleId }: AddGroupMembersDto,
+  ) {
+    return this.groupService.addMembers(id, profileIds, req.user.sub, req.user.organizationId, groupRoleId);
+  }
+
+  @Post(':id/member/remove')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.GROUP__EDIT)
+  removeMember(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: JwtAuthRequest,
+    @Body() { profileIds }: RemoveGroupMembersDto,
+  ) {
+    return this.groupService.removeMembers(id, profileIds, req.user.sub, req.user.organizationId);
   }
 }

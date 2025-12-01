@@ -14,6 +14,12 @@ export const THROTTLE_CONFIG = {
     limit: 5, // 5 attempts per minute
   },
 
+  // Refresh token - very strict
+  refresh: {
+    ttl: 60000, // 1 minute
+    limit: 5, // 5 attempts per minute
+  },
+
   // Password reset - strict to prevent abuse
   passwordReset: {
     ttl: 3600000, // 1 hour

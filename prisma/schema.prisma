@@ -32,7 +32,6 @@ model Organization {
   states            State[]
   cities            City[]
   townships         Township[]
-  activityLogs      ActivityLog[]
   relationshipTypes RelationshipType[]
   relationships     Relationship[]
   accessCodes       AccessCode[]
@@ -58,14 +57,12 @@ model User {
   organizationId Int?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
-  email              String
-  phone              String?
-  username           String
-  password           String
-  resetCode          String?
-  resetCodeExpiresAt DateTime?
-  isActive           Boolean   @default(true)
-  isSuperAdmin       Boolean   @default(false)
+  email                      String
+  password                   String
+  passwordResetCode          String?
+  passwordResetCodeExpiresAt DateTime?
+  isActive                   Boolean   @default(true)
+  isSuperAdmin               Boolean   @default(false)
 
   sessions Session[]
 
@@ -74,8 +71,6 @@ model User {
 
   profileId Int     @unique
   profile   Profile @relation("UserProfile", fields: [profileId], references: [id], onDelete: Restrict)
-
-  activityLogs ActivityLog[]
 
   createdById  Int?
   createdBy    User?  @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -100,10 +95,6 @@ model User {
   // Permission relations
   createdPermissions Permission[] @relation("PermissionCreatedBy")
   updatedPermissions Permission[] @relation("PermissionUpdatedBy")
-
-  // ActivityLog relations
-  createdActivityLogs ActivityLog[] @relation("ActivityLogCreatedBy")
-  updatedActivityLogs ActivityLog[] @relation("ActivityLogUpdatedBy")
 
   // Profile relations
   createdProfiles Profile[] @relation("ProfileCreatedBy")
@@ -146,8 +137,6 @@ model User {
   updatedHouseholds Household[] @relation("HouseholdUpdatedBy")
 
   @@unique([email, organizationId])
-  @@unique([phone, organizationId])
-  @@unique([username, organizationId])
   @@index([organizationId])
 }
 
@@ -198,32 +187,6 @@ model Role {
   updatedAt DateTime? @updatedAt
 
   @@unique([name, organizationId])
-  @@index([organizationId])
-}
-
-model ActivityLog {
-  id             Int          @id @default(autoincrement())
-  organizationId Int
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  actorId     Int
-  actor       User    @relation(fields: [actorId], references: [id], onDelete: Cascade)
-  action      String
-  description String?
-  resource    String?
-  resourceId  Int?
-  changes     Json?
-
-  createdById Int?
-  createdBy   User? @relation("ActivityLogCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-
-  updatedById Int?
-  updatedBy   User? @relation("ActivityLogUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-
-  updatedAt DateTime? @updatedAt
-
   @@index([organizationId])
 }
 
@@ -311,9 +274,9 @@ model Status {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  name           String
-  isActiveStatus Boolean @default(true)
-  description    String?
+  name        String
+  isActive    Boolean @default(true)
+  description String?
 
   profiles Profile[]
 
@@ -339,13 +302,23 @@ model Address {
 
   household Household?
 
-  isPublic   Boolean   @default(true)
-  room       String?
-  building   String?
-  street     String
-  road       String?
+  isPublic Boolean @default(true)
+  room     String?
+  building String?
+  street   String
+  road     String?
+
   townshipId Int?
   township   Township? @relation(fields: [townshipId], references: [id], onDelete: Cascade)
+
+  cityId Int?
+  city   City? @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  stateId Int?
+  state   State? @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  countryId Int?
+  country   Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
 }
@@ -377,6 +350,7 @@ model City {
   name String
 
   townships Township[]
+  addresses Address[]
 
   @@unique([name, stateId])
   @@index([stateId])
@@ -392,7 +366,8 @@ model State {
 
   name String
 
-  cities City[]
+  cities    City[]
+  addresses Address[]
 
   @@unique([name, countryId])
   @@index([countryId])
@@ -405,7 +380,8 @@ model Country {
 
   name String
 
-  states State[]
+  states    State[]
+  addresses Address[]
 
   @@unique([name, organizationId])
   @@index([organizationId])
@@ -416,10 +392,10 @@ model Membership {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  name               String
-  description        String?
-  isActiveMembership Boolean   @default(true)
-  profiles           Profile[]
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  profiles    Profile[]
 
   createdById Int?
   createdBy   User? @relation("MembershipCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
@@ -517,7 +493,6 @@ model GroupType {
   organizationId Int
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  code        String
   name        String
   description String?
 
@@ -531,8 +506,6 @@ model GroupType {
   updatedById Int?
   updatedBy   User?    @relation("GroupTypeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
-
-  @@unique([code, organizationId])
 }
 
 model GroupRole {
@@ -543,7 +516,6 @@ model GroupRole {
   groupTypeId Int
   groupType   GroupType @relation(fields: [groupTypeId], references: [id], onDelete: Cascade)
 
-  code        String
   name        String
   description String?
 
@@ -557,7 +529,6 @@ model GroupRole {
   updatedBy   User?    @relation("GroupRoleUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
   updatedAt   DateTime @updatedAt
 
-  @@unique([code, groupTypeId])
   @@index([groupTypeId])
 }
 
@@ -570,7 +541,7 @@ model Group {
   description String?
 
   groupTypeId Int
-  groupType   GroupType @relation(fields: [groupTypeId], references: [id], onDelete: Restrict)
+  groupType   GroupType @relation(fields: [groupTypeId], references: [id], onDelete: Cascade)
 
   members GroupProfile[]
 
@@ -629,6 +600,9 @@ model Household {
 
   members Profile[] @relation("HouseholdMembers")
 
+  householdGroupId Int?
+  householdGroup   HouseholdGroup? @relation(fields: [householdGroupId], references: [id], onDelete: SetNull)
+
   createdById Int?
   createdBy   User?    @relation("HouseholdCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
@@ -640,4 +614,25 @@ model Household {
   @@unique([name, organizationId])
   @@index([organizationId])
   @@index([headProfileId])
+}
+
+model HouseholdGroup {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+
+  households Household[]
+
+  createdById Int?
+  createdBy   User?    @relation("HouseholdGroupCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  updatedById Int?
+  updatedBy   User?    @relation("HouseholdGroupUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([name, organizationId])
 }

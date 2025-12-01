@@ -30,12 +30,7 @@ export class GroupTypeService {
       take: limit,
       where: {
         organizationId,
-        OR: search?.trim()
-          ? [
-              { name: { contains: search.trim(), mode: 'insensitive' } },
-              { code: { contains: search.trim(), mode: 'insensitive' } },
-            ]
-          : undefined,
+        ...(search?.trim() && { name: { contains: search.trim(), mode: 'insensitive' } }),
       },
       include: {
         _count: {
@@ -64,7 +59,7 @@ export class GroupTypeService {
   findAllDropdown(organizationId?: number) {
     return this.prisma.groupType.findMany({
       where: { organizationId },
-      select: { id: true, code: true, name: true },
+      select: { id: true, name: true },
       orderBy: { name: 'asc' },
     });
   }

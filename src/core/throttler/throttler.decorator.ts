@@ -8,6 +8,9 @@ import { THROTTLE_CONFIG, ThrottleConfigKey } from './throttler.config';
 export const ThrottleAuth = () =>
   Throttle({ default: THROTTLE_CONFIG.auth });
 
+export const ThrottleRefresh = () =>
+  Throttle({ default: THROTTLE_CONFIG.refresh });
+
 export const ThrottlePasswordReset = () =>
   Throttle({ default: THROTTLE_CONFIG.passwordReset });
 

@@ -31,16 +31,11 @@ export class GroupRoleService {
       where: {
         organizationId,
         ...(groupTypeId && { groupTypeId }),
-        OR: search?.trim()
-          ? [
-              { name: { contains: search.trim(), mode: 'insensitive' } },
-              { code: { contains: search.trim(), mode: 'insensitive' } },
-            ]
-          : undefined,
+        ...(search?.trim() && { name: { contains: search.trim(), mode: 'insensitive' } }),
       },
       include: {
         groupType: {
-          select: { id: true, code: true, name: true },
+          select: { id: true, name: true },
         },
         _count: {
           select: { members: true },
@@ -68,7 +63,7 @@ export class GroupRoleService {
   findAllDropdown(organizationId: number, groupTypeId?: number) {
     return this.prisma.groupRole.findMany({
       where: { organizationId, ...(groupTypeId && { groupTypeId }) },
-      select: { id: true, code: true, name: true },
+      select: { id: true, name: true },
       orderBy: { name: 'asc' },
     });
   }

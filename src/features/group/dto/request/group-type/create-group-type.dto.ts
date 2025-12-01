@@ -7,10 +7,6 @@ export class CreateGroupTypeDto {
 
   @IsString()
   @IsNotEmpty()
-  code: string;
-
-  @IsString()
-  @IsNotEmpty()
   name: string;
 
   @IsOptional()

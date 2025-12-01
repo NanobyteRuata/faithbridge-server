@@ -29,9 +29,7 @@ interface FindUniqieOrgUserParams {
 
 interface FindUniqieOrgUserUserFilterParams {
   id?: number;
-  username?: string;
   email?: string;
-  phone?: string;
 }
 
 interface FindUniqueOrgUserOrganizationFilterParams {
@@ -53,13 +51,15 @@ export class UserService {
     { userFilters, organizationFilters }: FindUniqieOrgUserParams,
     include?: Prisma.UserInclude,
   ): Promise<User | null> {
-    const { id, username, email, phone } = userFilters;
+    const { id, email } = userFilters;
+
+    if (!id && !email) return null;
 
     if (id) {
-      return await this.prisma.user.findUnique({ where: { id } });
+      return await this.prisma.user.findUnique({
+        where: { id, organizationId: organizationFilters?.organizationId },
+      });
     }
-
-    if (!username && !email && !phone) return null;
 
     let organizationId = organizationFilters?.organizationId;
     const organizationCode = organizationFilters?.organizationCode;
@@ -73,18 +73,13 @@ export class UserService {
 
     if (organizationId) {
       const where: Prisma.UserWhereUniqueInput = {
-        username_organizationId: username
-          ? { username, organizationId }
-          : undefined,
-        email_organizationId: email ? { email, organizationId } : undefined,
-        phone_organizationId: phone ? { phone, organizationId } : undefined,
+        ...(id && { id, organizationId }),
+        email_organizationId: email ? { email, organizationId } : undefined
       };
       return await this.prisma.user.findUnique({ where, include });
     } else {
       const where: Prisma.UserWhereInput = {
-        username,
         email,
-        phone,
         organizationId: null,
         isSuperAdmin: true,
       };
@@ -97,23 +92,30 @@ export class UserService {
     data: Partial<User> & { hashedPassword?: string },
     include?: Prisma.UserInclude,
   ) {
-    const user = await this.findUniqueOrgUser(filters, include);
-    if (!user) return null;
+    const user = await this.findUniqueOrgUser(filters);
+    if (!user || !user.isActive) throw new NotFoundException('User not found');
 
-    if (!data.hashedPassword) {
+    if (data.password) {
+      // eslint-disable-next-line
       data.password = await bcrypt.hash(data.password, 10);
-    } else {
-      data.password = data.hashedPassword;
     }
 
-    return await this.prisma.user.update({
+    if (data.hashedPassword) {
+      data.password = data.hashedPassword;
+      delete data.hashedPassword;
+    }
+
+    const res = await this.prisma.user.update({
       where: { id: user.id },
       data,
+      include,
     });
+
+    return this.filterSensitiveData(res);
   }
 
   async validateUser(
-    username: string,
+    email: string,
     password: string,
     organizationCode?: string,
   ): Promise<User> {
@@ -121,11 +123,11 @@ export class UserService {
       role: { include: { permissions: true } },
     };
     const user: User | null = await this.findUniqueOrgUser(
-      { userFilters: { username }, organizationFilters: { organizationCode } },
+      { userFilters: { email }, organizationFilters: { organizationCode } },
       userInclude,
     );
 
-    if (!user) {
+    if (!user || !user.isActive) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -141,35 +143,44 @@ export class UserService {
     return user;
   }
 
-  async findAll({ page, skip, limit, search }: GetUsersDto, organizationId?: number) {
-      const args: Prisma.UserFindManyArgs = {
-          skip,
-          take: limit,
-          where: { organizationId },
-          include: {
-            role: true,
-            profile: true,
-          },
-        };
-    
-        const [users, total] = await this.prisma.$transaction([
-          this.prisma.user.findMany(args),
-          this.prisma.user.count({ where: args.where }),
-        ]);
-    
-        const filteredUsers = users.map((user) =>
-          this.filterSensitiveData(user),
-        );
-    
-        return {
-          data: filteredUsers,
-          meta: {
-            page,
-            limit,
-            total,
-          },
-          success: true,
-        };
+  async findAll(
+    { page, skip, limit, search, isActive }: GetUsersDto,
+    organizationId?: number,
+  ) {
+    const args: Prisma.UserFindManyArgs = {
+      skip,
+      take: limit,
+      where: {
+        isActive,
+        organizationId,
+        ...(search && {
+          OR: [
+            { email: { contains: search } },
+          ],
+        }),
+      },
+      include: {
+        role: true,
+        profile: true,
+      },
+    };
+
+    const [users, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany(args),
+      this.prisma.user.count({ where: args.where }),
+    ]);
+
+    const filteredUsers = users.map((user) => this.filterSensitiveData(user));
+
+    return {
+      data: filteredUsers,
+      meta: {
+        page,
+        limit,
+        total,
+      },
+      success: true,
+    };
   }
 
   async login(
@@ -196,6 +207,7 @@ export class UserService {
       accessToken,
       refreshToken,
       deviceId,
+      user.email,
       jwtPayload?.permissions,
     );
   }
@@ -205,11 +217,10 @@ export class UserService {
     userId: number,
     userOrganizationId?: number,
   ): Promise<RegisterResponseDto> {
-    const { username, email, password, organizationId, profileId } =
-      registerDto;
+    const { email, password, organizationId, profileId } = registerDto;
 
     // Check if user already exists
-    const userFilters = { username, email };
+    const userFilters = { email };
     const organizationFilters = { organizationId };
     const existingUser = await this.findUniqueOrgUser({
       userFilters,
@@ -217,7 +228,7 @@ export class UserService {
     });
 
     if (existingUser) {
-      throw new ForbiddenException('Username already exists');
+      throw new ForbiddenException('User already exists');
     }
 
     // Hash password
@@ -227,9 +238,7 @@ export class UserService {
     // Create user
     const user = await this.prisma.user.create({
       data: {
-        username,
         email,
-        phone: registerDto.phone,
         password: hashedPassword,
         isActive: true,
         organizationId: organizationId ?? userOrganizationId,
@@ -255,11 +264,22 @@ export class UserService {
     );
   }
 
+  async deleteUser(userId: number, organizationId?: number) {
+    return this.prisma.user.delete({
+      where: { id: userId, organizationId },
+    });
+  }
+
   async refreshTokens(
     userId: number,
     refreshToken: string,
     deviceId: string,
   ): Promise<Tokens> {
+    const user = await this.findUniqueOrgUser({ userFilters: { id: userId } });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     // Find the session with this refresh token
     const session = await this.prisma.session.findFirst({
       where: {
@@ -288,15 +308,6 @@ export class UserService {
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    // Get user
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
     // Generate new tokens
     // eslint-disable-next-line
     const { jwtPayload, ...tokens } = await this.generateTokens(user, deviceId);
@@ -309,15 +320,17 @@ export class UserService {
       tokens.accessToken,
       tokens.refreshToken,
       deviceId,
+      user.email,
       jwtPayload?.permissions,
     );
   }
 
-  async logout(userId: number, refreshToken: string): Promise<boolean> {
+  async logout(userId: number, refreshToken: string, deviceId?: string): Promise<boolean> {
     await this.prisma.session.deleteMany({
       where: {
         userId,
         refreshToken,
+        deviceId,
       },
     });
 
@@ -342,19 +355,21 @@ export class UserService {
       userFilters: { email },
       organizationFilters: { organizationCode },
     });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user || !user.isActive) throw new NotFoundException('User not found');
 
     const code = randomInt(100000, 999999).toString();
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     const data = {
-      resetCode: code,
-      resetCodeExpiresAt: expires,
+      passwordResetCode: code,
+      passwordResetCodeExpiresAt: expires,
     };
     await this.updateOrgUser(
       { userFilters: { email }, organizationFilters: { organizationCode } },
       data,
     );
+
+    console.log(code);
 
     await this.emailService.sendEmail(
       email,
@@ -365,7 +380,7 @@ export class UserService {
 
     return {
       success: true,
-      message: "Password reset code sent successfully",
+      message: 'Password reset code sent successfully',
     };
   }
 
@@ -381,9 +396,10 @@ export class UserService {
     });
     if (
       !user ||
-      user.resetCode !== code ||
-      !user.resetCodeExpiresAt ||
-      user.resetCodeExpiresAt.getTime() < Date.now()
+      !user.isActive ||
+      user.passwordResetCode !== code ||
+      !user.passwordResetCodeExpiresAt ||
+      user.passwordResetCodeExpiresAt.getTime() < Date.now()
     ) {
       throw new BadRequestException('Invalid or expired code');
     }
@@ -398,14 +414,14 @@ export class UserService {
     };
     const data = {
       hashedPassword,
-      resetCode: null,
-      resetCodeExpiresAt: null,
+      passwordResetCode: null,
+      passwordResetCodeExpiresAt: null,
     };
     await this.updateOrgUser(filter, data);
 
     return {
       success: true,
-      message: "Password reset successfully",
+      message: 'Password reset successfully',
     };
   }
 
@@ -444,8 +460,8 @@ export class UserService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { 
-          ...jwtPayload, 
+        {
+          ...jwtPayload,
           jti: accessTokenId,
           iat: Math.floor(timestamp / 1000),
         },
@@ -458,8 +474,9 @@ export class UserService {
         },
       ),
       this.jwtService.signAsync(
-        { 
-          ...jwtPayload, 
+        {
+          sub: jwtPayload.sub,
+          organizationId: jwtPayload.organizationId,
           deviceId,
           jti: refreshTokenId,
           iat: Math.floor(timestamp / 1000),
@@ -552,8 +569,10 @@ export class UserService {
     }
   }
 
-  private filterSensitiveData(user: User): Partial<User> {
-    const { password, resetCode, resetCodeExpiresAt, ...rest } = user;
-    return rest;
+  private filterSensitiveData(user: Partial<User>): Partial<User> {
+    delete user.password;
+    delete user.passwordResetCode;
+    delete user.passwordResetCodeExpiresAt;
+    return user;
   }
 }

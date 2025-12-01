@@ -11,10 +11,6 @@ export class CreateGroupRoleDto {
 
   @IsString()
   @IsNotEmpty()
-  code: string;
-
-  @IsString()
-  @IsNotEmpty()
   name: string;
 
   @IsOptional()

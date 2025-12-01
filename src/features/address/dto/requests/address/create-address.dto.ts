@@ -28,4 +28,16 @@ export class CreateAddressDto {
   @IsNumber()
   @IsOptional()
   townshipId?: number;
+
+  @IsNumber()
+  @IsOptional()
+  cityId?: number;
+
+  @IsNumber()
+  @IsOptional()
+  stateId?: number;
+
+  @IsNumber()
+  @IsOptional()
+  countryId?: number;
 }

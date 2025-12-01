@@ -1,16 +1,12 @@
 import { Profile, Role, User } from '@prisma/client';
 
 export class RegisterResponseDto {
-  username: string;
   email: string;
-  phone: string | null;
   role: Partial<Role>;
   profile: Partial<Profile>;
 
   constructor(user: User & { role: Role | null; profile: Profile }) {
-    this.username = user.username;
     this.email = user.email;
-    this.phone = user.phone;
     this.role = {
       id: user.role?.id,
       name: user.role?.name,

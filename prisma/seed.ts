@@ -34,8 +34,6 @@ async function createSuperAdmin(): Promise<User> {
   const superAdmin = await prisma.user.create({
     data: {
       email,
-      phone,
-      username,
       password: hashedPassword,
       isSuperAdmin: true,
       isActive: true,
@@ -119,9 +117,7 @@ async function createOrgAdmin(
       organization: { connect: { id: organizationId } },
       profile: { connect: { id: profile.id } },
       email,
-      phone,
       password: hashedPassword,
-      username,
       role: { connect: role },
       createdBy: { connect: { id: superAdmin.id } },
       updatedBy: { connect: { id: superAdmin.id } },
@@ -332,9 +328,7 @@ async function createOrgUser(
       organization: { connect: { id: organizationId } },
       profile: { connect: { id: profile.id } },
       email,
-      phone,
       password: hashedPassword,
-      username,
       role: { connect: role },
       createdBy: { connect: { id: orgAdmin.id } },
       updatedBy: { connect: { id: orgAdmin.id } },

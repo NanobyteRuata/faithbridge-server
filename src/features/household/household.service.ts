@@ -337,4 +337,42 @@ export class HouseholdService {
     console.warn('Household deleted by:', userId);
     return this.prisma.household.delete({ where: { id } });
   }
+
+  async addMembers(
+    householdId: number,
+    profileIds: number[],
+    updatedById: number,
+    organizationId?: number,
+  ) {
+    return this.prisma.household.update({
+      where: { id: householdId, organizationId },
+      data: {
+        members: {
+          connect: profileIds.map((profileId) => ({ id: profileId })),
+        },
+        updatedBy: {
+          connect: { id: updatedById },
+        },
+      },
+    });
+  }
+
+  async removeMembers(
+    householdId: number,
+    profileIds: number[],
+    updatedById: number,
+    organizationId?: number,
+  ) {
+    return this.prisma.household.update({
+      where: { id: householdId, organizationId },
+      data: {
+        members: {
+          disconnect: profileIds.map((profileId) => ({ id: profileId })),
+        },
+        updatedBy: {
+          connect: { id: updatedById },
+        },
+      },
+    });
+  }
 }

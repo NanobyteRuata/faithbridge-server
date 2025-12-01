@@ -9,24 +9,24 @@ import { Request } from 'express';
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(private userService: UserService) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    super({ passReqToCallback: true });
+    super({ passReqToCallback: true, usernameField: 'email' });
   }
 
   async validate(
     req: Request,
-    username: string,
+    email: string,
     password: string,
   ): Promise<User> {
     // eslint-disable-next-line
     const organizationCode: string | undefined = req.body?.organizationCode;
 
     const user = await this.userService.validateUser(
-      username,
+      email,
       password,
       organizationCode,
     );
-    if (!user) {
-      throw new UnauthorizedException();
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Invalid credentials');
     }
     return user;
   }

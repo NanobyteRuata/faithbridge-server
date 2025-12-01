@@ -58,7 +58,7 @@ export class GroupProfileService {
           select: { id: true, organizationId: true, name: true, groupTypeId: true },
         },
         groupRole: {
-          select: { id: true, organizationId: true, groupTypeId: true, code: true, name: true },
+          select: { id: true, organizationId: true, groupTypeId: true, name: true },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -91,7 +91,7 @@ export class GroupProfileService {
           select: { id: true, name: true },
         },
         groupRole: {
-          select: { id: true, code: true, name: true },
+          select: { id: true, name: true },
         },
       },
     });

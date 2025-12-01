@@ -23,6 +23,8 @@ import {
   ThrottleRead,
   ThrottleWrite,
 } from 'src/core/throttler/throttler.decorator';
+import { AddHouseholdMembersDto } from './dto/request/add-household-member.dto';
+import { RemoveHouseholdMembersDto } from './dto/request/remove-household-members';
 
 @Controller('household')
 export class HouseholdController {
@@ -93,5 +95,41 @@ export class HouseholdController {
   remove(@Req() { user }: HybridAuthRequest, @Param('id') id: number) {
     const userId = 'sub' in user ? user.sub : 0;
     return this.householdService.remove(id, userId, user.organizationId);
+  }
+
+  @Post(':householdId/member/add')
+  @ThrottleWrite()
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.PROFILE__EDIT)
+  addMembers(
+    @Req() { user }: HybridAuthRequest,
+    @Param('householdId') householdId: number,
+    @Body() { profileIds }: AddHouseholdMembersDto,
+  ) {
+    const updatedById = 'sub' in user ? user.sub : 0;
+    return this.householdService.addMembers(
+      householdId,
+      profileIds,
+      updatedById,
+      user.organizationId,
+    );
+  }
+
+  @Post(':householdId/member/remove')
+  @ThrottleWrite()
+  @UseGuards(HybridAuthGuard, PermissionsGuard)
+  @Permissions(PERMISSIONS.PROFILE__EDIT)
+  removeMember(
+    @Req() { user }: HybridAuthRequest,
+    @Param('householdId') householdId: number,
+    @Body() { profileIds }: RemoveHouseholdMembersDto,
+  ) {
+    const updatedById = 'sub' in user ? user.sub : 0;
+    return this.householdService.removeMembers(
+      householdId,
+      profileIds,
+      updatedById,
+      user.organizationId,
+    );
   }
 }

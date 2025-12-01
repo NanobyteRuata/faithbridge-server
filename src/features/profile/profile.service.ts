@@ -34,8 +34,14 @@ export class ProfileService {
     userId: number,
     organizationId?: number,
   ) {
-    const { addresses, membershipId, statusId, householdId, groupId, ...profileData } =
-      createProfileDto;
+    const {
+      addresses,
+      membershipId,
+      statusId,
+      householdId,
+      groupId,
+      ...profileData
+    } = createProfileDto;
 
     return this.prisma.$transaction(async (tx) => {
       const profile = await tx.profile.create({
@@ -160,10 +166,10 @@ export class ProfileService {
           id: organizationId,
         },
         ...(statusIds && {
-          status: { isActiveStatus: true, id: { in: statusIds } },
+          status: { isActive: true, id: { in: statusIds } },
         }),
         ...(membershipIds && {
-          membership: { isActiveMembership: true, id: { in: membershipIds } },
+          membership: { isActive: true, id: { in: membershipIds } },
         }),
         ...(townshipIds && {
           addresses: { every: { townshipId: { in: townshipIds } } },
@@ -245,7 +251,9 @@ export class ProfileService {
 
   async findAllDropdown({ search }: GetProfilesDto, organizationId?: number) {
     return this.prisma.profile.findMany({
-      where: { organizationId, ...(search && {
+      where: {
+        organizationId,
+        ...(search && {
           OR: [
             {
               title: {
@@ -272,7 +280,8 @@ export class ProfileService {
               },
             },
           ],
-        }) },
+        }),
+      },
       select: { id: true, name: true },
     });
   }
@@ -311,8 +320,14 @@ export class ProfileService {
     userId: number,
     organizationId?: number,
   ) {
-    const { addresses, membershipId, statusId, householdId, groupId, ...profileData } =
-      updateProfileDto;
+    const {
+      addresses,
+      membershipId,
+      statusId,
+      householdId,
+      groupId,
+      ...profileData
+    } = updateProfileDto;
 
     return this.prisma.$transaction(async (tx) => {
       // Update profile data

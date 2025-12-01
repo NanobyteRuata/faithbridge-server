@@ -38,7 +38,7 @@ export class GroupService {
       },
       include: {
         groupType: {
-          select: { id: true, organizationId: true, code: true, name: true },
+          select: { id: true, organizationId: true, name: true },
         },
         _count: {
           select: { members: true },
@@ -82,7 +82,7 @@ export class GroupService {
               select: { id: true, name: true, lastName: true },
             },
             groupRole: {
-              select: { id: true, code: true, name: true },
+              select: { id: true, name: true },
             },
           },
         },
@@ -115,5 +115,44 @@ export class GroupService {
 
     console.warn(userId);
     return this.prisma.group.delete({ where: { id } });
+  }
+
+  async addMembers(
+    groupId: number,
+    profileIds: number[],
+    updatedById: number,
+    organizationId?: number,
+    groupRoleId?: number,
+  ) {
+    return this.prisma.group.update({
+      where: { id: groupId, organizationId },
+      data: {
+        members: {
+          connect: profileIds.map((profileId) => ({ id: profileId, groupRoleId })),
+        },
+        updatedBy: {
+          connect: { id: updatedById },
+        },
+      },
+    });
+  }
+
+  async removeMembers(
+    groupId: number,
+    profileIds: number[],
+    updatedById: number,
+    organizationId?: number,
+  ) {
+    return this.prisma.group.update({
+      where: { id: groupId, organizationId },
+      data: {
+        members: {
+          disconnect: profileIds.map((profileId) => ({ id: profileId })),
+        },
+        updatedBy: {
+          connect: { id: updatedById },
+        },
+      },
+    });
   }
 }

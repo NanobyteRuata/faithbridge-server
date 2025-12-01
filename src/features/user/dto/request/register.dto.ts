@@ -11,11 +11,6 @@ import {
 
 export class RegisterDto {
   @IsString()
-  @MinLength(3)
-  @MaxLength(20)
-  username: string;
-
-  @IsString()
   @IsNotEmpty()
   @IsEmail()
   email: string;
@@ -35,10 +30,6 @@ export class RegisterDto {
     },
   )
   password: string;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
 
   @IsNumber()
   @IsNotEmpty()
