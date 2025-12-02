@@ -1,6 +1,6 @@
 # Rate Limiting Module
 
-This module provides custom rate limiting decorators for the FaithBridge Server API.
+This module provides custom rate limiting decorators for the MyEcclesia Server API.
 
 ## Quick Start
 

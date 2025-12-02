@@ -1,6 +1,6 @@
 # Security Best Practices Implementation
 
-This document outlines the security measures implemented in the FaithBridge Server application.
+This document outlines the security measures implemented in the MyEcclesia Server application.
 
 ## 🔒 Authentication & Authorization
 

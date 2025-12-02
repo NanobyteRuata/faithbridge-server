@@ -1,4 +1,4 @@
-## FaithBridge Server
+## MyEcclesia Server
 
 ### Prerequisites
 - Docker
