@@ -51,14 +51,14 @@ export class GetProfilesDto extends PaginationDto {
   @IsArray()
   @IsInt({ each: true })
   @Type(() => Number)
-  householdIds?: number[];
+  groupIds?: number[];
 
   @IsOptional()
   @Transform(toArray)
   @IsArray()
   @IsInt({ each: true })
   @Type(() => Number)
-  groupIds?: number[];
+  groupRoleIds?: number[];
 
   @IsOptional()
   @Transform(({ value }) => {

@@ -135,10 +135,6 @@ export class CreateProfileDto {
 
   @IsOptional()
   @IsNumber()
-  householdId?: number;
-
-  @IsOptional()
-  @IsNumber()
   groupId?: number;
 }
 

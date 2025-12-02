@@ -38,7 +38,6 @@ export class ProfileService {
       addresses,
       membershipId,
       statusId,
-      householdId,
       groupId,
       ...profileData
     } = createProfileDto;
@@ -56,7 +55,6 @@ export class ProfileService {
             membership: { connect: { id: membershipId } },
           }),
           ...(statusId && { status: { connect: { id: statusId } } }),
-          ...(householdId && { household: { connect: { id: householdId } } }),
           ...(groupId && {
             groupMemberships: {
               create: {
@@ -124,8 +122,8 @@ export class ProfileService {
       cityIds,
       stateIds,
       countryIds,
-      householdIds,
       groupIds,
+      groupRoleIds,
       isUser,
     }: GetProfilesDto,
     organizationId?: number,
@@ -197,11 +195,11 @@ export class ProfileService {
               },
             },
           }),
-        ...(householdIds && {
-          household: { id: { in: householdIds } },
-        }),
         ...(groupIds && {
           groupMemberships: { some: { groupId: { in: groupIds } } },
+        }),
+        ...(groupRoleIds && {
+          groupMemberships: { some: { groupRoleId: { in: groupRoleIds } } },
         }),
         ...(isUser != null && {
           user: isUser ? { isNot: null } : { is: null },
@@ -211,16 +209,6 @@ export class ProfileService {
         status: true,
         membership: true,
         user: true,
-        household: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            headProfileId: true,
-            addressId: true,
-            members: true,
-          },
-        },
         ...addressInclude,
       },
     };
@@ -293,16 +281,6 @@ export class ProfileService {
         status: true,
         membership: true,
         user: true,
-        household: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            headProfileId: true,
-            addressId: true,
-            members: true,
-          },
-        },
         ...addressInclude,
       },
     });
@@ -324,7 +302,6 @@ export class ProfileService {
       addresses,
       membershipId,
       statusId,
-      householdId,
       groupId,
       ...profileData
     } = updateProfileDto;
@@ -357,7 +334,6 @@ export class ProfileService {
           }),
           ...(membershipId !== undefined && { membershipId }),
           ...(statusId !== undefined && { statusId }),
-          ...(householdId !== undefined && { householdId }),
           updatedById: userId,
         },
       });

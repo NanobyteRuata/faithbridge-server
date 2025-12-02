@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 import { CreateGroupDto } from '../dto/request/group/create-group.dto';
 import { UpdateGroupDto } from '../dto/request/group/update-group.dto';
@@ -124,11 +124,24 @@ export class GroupService {
     organizationId?: number,
     groupRoleId?: number,
   ) {
+    const group = await this.findOne(groupId, organizationId);
+    const isNotSameOrg = organizationId && group?.organizationId !== organizationId;
+    if (!group || (organizationId && isNotSameOrg)) {
+      throw new NotFoundException('Group not found');
+    }
+
     return this.prisma.group.update({
-      where: { id: groupId, organizationId },
+      where: { id: groupId },
       data: {
         members: {
-          connect: profileIds.map((profileId) => ({ id: profileId, groupRoleId })),
+          createMany: {
+            data: profileIds.map((profileId) => ({
+              profileId,
+              groupRoleId,
+              organizationId: organizationId || group.organizationId,
+            })),
+            skipDuplicates: true,
+          },
         },
         updatedBy: {
           connect: { id: updatedById },
@@ -147,7 +160,7 @@ export class GroupService {
       where: { id: groupId, organizationId },
       data: {
         members: {
-          disconnect: profileIds.map((profileId) => ({ id: profileId })),
+          deleteMany: profileIds.map((profileId) => ({ profileId })),
         },
         updatedBy: {
           connect: { id: updatedById },
